@@ -1,3 +1,6 @@
+# Countries use code defined by ISO 3166 standard
+# http://www.iso.org/iso/english_country_names_and_code_elements
+
 class LinktvPlatformCreateCountries < ActiveRecord::Migration
   def self.up
 	  create_table "countries", :options => "ENGINE=InnoDB DEFAULT CHARACTER SET utf8 COLLATE utf8_unicode_ci", :force => true do |t|
