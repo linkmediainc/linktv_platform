@@ -6,8 +6,8 @@ ActionController::Routing::Routes.draw do |map|
   #
 
   # May override in application
-  map.root :controller => 'home'
-  map.home '/', :controller => 'home', :action => 'index'
+#  map.root :controller => 'home'
+#  map.home '/', :controller => 'home', :action => 'index', :path => '/world'
 
   map.resources :videos, :only => [:index, :show],
       :member => {:player => :get, :swf => :get, :register_play => :post}
