@@ -157,19 +157,10 @@ namespace :linktv_platform do
             :active => true,
             :lifetime => nil})
 
-        truveo = TruveoApi.create!({
-            :name => "Truveo",
-            :url => "http://xml.truveo.com/apiv3",
-            :query_params => nil,
-            :quota_config => nil,
-            :active => true,
-            :lifetime => nil})
-
         ct_videos = ContentType.find_by_name('Related Videos')
         ct_articles = ContentType.find_by_name('Related Articles')
         ct_actions = ContentType.find_by_name('Social Actions')
 
-        ContentTypeSemanticApi.create!({:semantic_api_id => truveo.id, :content_type_id => ct_videos.id})
         ContentTypeSemanticApi.create!({:semantic_api_id => zemanta.id, :content_type_id => ct_articles.id})
         ContentTypeSemanticApi.create!({:semantic_api_id => daylife.id, :content_type_id => ct_articles.id})
         ContentTypeSemanticApi.create!({:semantic_api_id => social_actions.id, :content_type_id => ct_actions.id})

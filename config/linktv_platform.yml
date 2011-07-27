@@ -83,10 +83,6 @@ apis:
     accesskey: 
     secretkey: 
     limit: 20
-  truveo:
-    appid: 
-    sharedsecret: 
-    limit: 20
   zemanta:
     api_key: 
     limit: 20
