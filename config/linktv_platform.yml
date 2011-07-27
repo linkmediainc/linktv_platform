@@ -79,6 +79,9 @@ apis:
     # Default score below which related content (articles, etc.) will be filtered
     low_score_threshold: 50
   # API-specific settings
+  bing:
+    appid:
+    limit: 20
   daylife:
     accesskey: 
     secretkey: 
