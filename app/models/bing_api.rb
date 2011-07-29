@@ -8,7 +8,8 @@ class BingApi < SemanticApi
         "Version" => '2.2',
         "Market" => 'en-US',
         "Sources" => 'Video',
-        'Video.count' => APP_CONFIG[:apis][:bing][:limit] || 10
+        'Video.SortBy' => 'Date',
+        'Video.Count' => APP_CONFIG[:apis][:bing][:limit] || 10
       }
 
       # Apply DB overrides
@@ -115,6 +116,44 @@ class BingApi < SemanticApi
   end
 
 end
+
+=begin
+Sample response
+
+http://msdn.microsoft.com/en-us/library/dd250846.aspx
+
+{
+   "SearchResponse":{
+      "Version":"2.2",
+      "Query":{
+         "SearchTerms":"testign"
+      },
+      "Spell":{
+         "Total":1,
+         "Results":[
+            {
+               "Value":"testing"
+            }
+         ]
+      },
+      "Web":{
+         "Total":5100,
+         "Offset":0,
+         "Results":[
+            {
+               "Title":"Testign part 2 - Tiernan OTooles Programming Blog",
+               "Description":"If this works, it means nothing really, but i have managed to build a .TEXT blog posting app. could be handy if i move my main blog to .TEXT, which i am thinking about..",
+               "Url":"http:\/\/weblogs.asp.net\/tiernanotoole\/archive\/2004\/09\/24\/233830.aspx",
+               "DisplayUrl":"http:\/\/weblogs.asp.net\/tiernanotoole\/archive\/2004\/09\/24\/233830.aspx",
+               "DateTime":"2008-10-21T05:08:05Z"
+            }
+         ]
+      }
+   }
+}
+
+=end
+
 
 # == Schema Information
 #
