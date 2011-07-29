@@ -92,7 +92,7 @@ class BingApi < SemanticApi
           :duration => item['RunTime'] || nil,
           :published_at => item['dateProduced'] || nil,
           :content_source => content_source,
-          :score => nil,
+          :score => 1.0,
           :content_type => content_type,
           :semantic_api => self,
           :active => true,
