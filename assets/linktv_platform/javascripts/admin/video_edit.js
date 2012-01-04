@@ -305,8 +305,15 @@ var VideoEdit = {
       var target = $j(this);
       setTimeout(function() {
         if (target.hasClass('state-disabled')) return;
-        var topic = target.parents('.object-topic-with-controls:first').hide();
-        topic.addClass('state-deleted static-static').find('input.destroy').val(1);
+        var topic = target.parents('.object-topic-with-controls:first');
+        var destroy_input = topic.find('input.destroy');
+        if (destroy_input.size() == 0) {
+          // we're deleting a topic we just added, so just dump the whole element
+          topic.remove();
+        } else {
+          topic.addClass('state-deleted static-static').hide();
+          destroy_input.val(1);
+        }
         var segment = topic.parents('.object-video-segment:first');
         VideoEdit.updateSegmentState(segment);
         Admin.setContentModified();
