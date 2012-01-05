@@ -210,7 +210,7 @@ class Video < ActiveRecord::Base
       self.class.featured_videos_by_id[self.id].present?
     end
   end
-
+  
   # Convenience method for polymorphic references
   def video
     self
@@ -381,6 +381,10 @@ class Video < ActiveRecord::Base
     else
       return []
     end
+  end
+  
+  def canonical_date
+    source_published_at || published_at || created_at
   end
 
   # sunspot (solr) fulltext searching

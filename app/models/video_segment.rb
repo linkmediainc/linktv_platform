@@ -280,17 +280,14 @@ class VideoSegment < ActiveRecord::Base
     self.view_data ||= {}
 
     # Internal related videos
-    self.view_data[:related_internal_videos] = Video.
+    self.view_data[:related_internal_videos] = VideoSegment.sort_internal_video_segments(Video.
       scoped(:conditions => ["videos.id != ?", self.video_id]).
       available.
       related_to_video_segments(self.id).
-      include_thumbnail
+      include_thumbnail)
 
-    self.view_data[:related_internal_video_segments] = VideoSegment.
-      scoped(:conditions => ["video_segments.video_id != ?", self.video_id]).
-      scoped(:include => :video, :joins => :video).video_available.
-      related_to_video_segments(self.id).
-      include_thumbnail
+    self.view_data[:related_internal_video_segments] = VideoSegment.sort_internal_video_segments(
+      VideoSegment.related_to_video_segments(self.id).include_thumbnail) 
 
     # Note: This does not set a scope but loads the collection.
     # Necessary since we'll be filtering the results
@@ -307,6 +304,18 @@ class VideoSegment < ActiveRecord::Base
       # For the front end, we don't display filtered items at all.
       contents.reject!{|c| c.filtered?}
     end
+  end
+  
+  class << self
+    
+    # this is a hook to allow us to play with the order of the internal videos - we don't want
+    # the sorting preferences across the whole platform (at least not now) so we're just 
+    # providing this hook that can be overridden within site-specific code
+    def sort_internal_video_segments(segments)
+      # no-op
+      segments
+    end
+    
   end
 
   # sunspot (solr) fulltext searching
