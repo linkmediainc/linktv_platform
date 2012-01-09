@@ -9,11 +9,13 @@ class VsearchApi < SemanticApi
       end
       params = { 'q' => query, 'mm' => 1 }
 
-      # TODO: reset this
-      self.url = "http://localhost:8000/api/video/search"
       uri = URI.parse(self.url + query_string(params))
-      response = Net::HTTP.get_response uri
-
+      # we can simplify this block to the following line once we've removed the auth wall
+      # response = Net::HTTP.get_response uri
+      http = Net::HTTP.new(uri.host, uri.port)
+      request = Net::HTTP::Get.new(uri.request_uri)
+      request.basic_auth("linkmedia", "searchlink")
+      response = http.request(request)
       results = JSON.parse response.body
 
       if response.code != '200'
