@@ -4,9 +4,12 @@ class VsearchApi < SemanticApi
     begin
       return nil unless args[:text] && args[:text].is_a?(String) && !args[:text].empty?
 
-      query = args[:topics_data].inject('') do |str, topic| 
+      relevant = args[:topics_data].select { |t| t['score'].to_i > 90 }
+      query = relevant.inject('') do |str, topic|
         str += ('"' + topic['name'].gsub(/"/, '\"') + '" ')
       end
+      return { :status => nil } if query.blank?
+      
       params = { 'q' => query, 'mm' => 1 }
 
       uri = URI.parse(self.url + query_string(params))
