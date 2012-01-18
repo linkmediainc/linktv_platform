@@ -67,7 +67,7 @@ class VsearchApi < SemanticApi
           :semantic_api => self,
           :active => true,
           :deleted => false
-        }) unless args[:omit_identifiers][identifier].present?
+        }) unless args[:omit_identifiers] && args[:omit_identifiers][identifier].present?
       end
 
       result[:status] = :success
