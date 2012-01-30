@@ -280,11 +280,11 @@ class VideoSegment < ActiveRecord::Base
     self.view_data ||= {}
 
     # Internal related videos
-    self.view_data[:related_internal_videos] = VideoSegment.sort_internal_video_segments(Video.
+    self.view_data[:related_internal_videos] = Video.
       scoped(:conditions => ["videos.id != ?", self.video_id]).
       available.
       related_to_video_segments(self.id).
-      include_thumbnail)
+      include_thumbnail
 
     self.view_data[:related_internal_video_segments] = VideoSegment.sort_internal_video_segments(
       VideoSegment.related_to_video_segments(self.id).include_thumbnail) 
