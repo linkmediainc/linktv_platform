@@ -286,13 +286,11 @@ class VideoSegment < ActiveRecord::Base
       related_to_video_segments(self.id).
       include_thumbnail
 
-    self.view_data[:related_internal_video_segments] = VideoSegment.sort_internal_video_segments(
-      VideoSegment.
+    self.view_data[:related_internal_video_segments] = VideoSegment.
         scoped(:conditions => ["video_segments.video_id != ?", self.video_id]).
         scoped(:include => :video, :joins => :video).video_available.
         related_to_video_segments(self.id).
         include_thumbnail
-    ) 
 
     # Note: This does not set a scope but loads the collection.
     # Necessary since we'll be filtering the results
