@@ -264,9 +264,10 @@ class VideosController < FrontEndController
 
     load_videos
 
+    feed_limit = APP_CONFIG[:rss][:videos][:limit] rescue 15
     @videos = @videos.order('published_at DESC').
       scoped(:include => [:video_files, :thumbnail, :topics]).
-      limit((APP_CONFIG[:rss][:videos][:limit] rescue 15)).all
+      limit(feed_limit).all
 
     @rss_settings = APP_CONFIG[:rss][:videos].dup
     @rss_settings[:pubDate] = @videos.count > 0 ? @videos[0].published_at : Time.now
@@ -278,6 +279,10 @@ class VideosController < FrontEndController
     unless @regions.empty?
       @rss_settings[:description] += " (Filtered by regions: " + @regions.collect{|r| r.name}.join(', ') + ")"
     end
+    
+    @video_segments = []
+    @videos.each { |video| @video_segments.concat(video.video_segments) }
+    @video_segments = @video_segments[0,feed_limit]
 
     respond_to do |format|
       format.rss {
