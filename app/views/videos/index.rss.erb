@@ -11,7 +11,7 @@
       <% video_file = vs.video.video_files.available.scoped_by_media_type(:internal).ordered.last %>
       <item>
         <title><%= vs.name %></title>
-        <link><%= video_url(vs.video.permalink) %></link>
+        <link><%= video_url(vs.video.permalink, :start => vs.start_time) %></link>
         <description><%= vs.video.description %></description>
         <pubDate><%= vs.video.published_at.to_s(:rfc822) %></pubDate>
         <guid><%= video_url(vs.video.permalink) %></guid>
@@ -19,7 +19,7 @@
         <enclosure url="<%= video_file.download_url.html_safe %>" length="<%= video_file.file_size %>" type="<%= video_file.mime_type %>" />
         <% end %>
         <% if vs.video.thumbnail.present? %>
-        <media:thumbnail url="<%= thumbnail_url(vs.video.thumbnail, :width => 480, :height => 360, :format => :jpg) %>" />
+        <media:thumbnail url="<%= thumbnail_url(vs.thumbnail, :width => 480, :height => 360, :format => :jpg) %>" />
         <% end %>
         <media:keywords><%= video_rss_keywords(vs.video) %></media:keywords>
         <media:text><%= vs.transcript_text %></media:text>
