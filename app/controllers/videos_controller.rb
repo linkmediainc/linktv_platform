@@ -282,6 +282,12 @@ class VideosController < FrontEndController
     
     @video_segments = []
     @videos.each { |video| @video_segments.concat(video.video_segments) }
+    unless @filtered_topic_ids.empty?
+      topic_id_set = Set.new(@filtered_topic_ids)
+      @video_segments = @video_segments.reject do |vs|
+        (Set.new(vs.topics.collect(&:id)) & topic_id_set).empty?
+      end
+    end
     @video_segments = @video_segments[0,feed_limit]
 
     respond_to do |format|
