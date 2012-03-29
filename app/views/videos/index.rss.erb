@@ -12,7 +12,7 @@
       <item>
         <title><%= vs.name %></title>
         <link><%= video_url(vs.video.permalink, :start => vs.start_time) %></link>
-        <description><%= vs.video.description %></description>
+        <description><%= vs.description %></description>
         <pubDate><%= vs.video.published_at.to_s(:rfc822) %></pubDate>
         <guid><%= video_url(vs.video.permalink) %></guid>
         <% if video_file.present? && vs.video.download_enabled && !video_file.download_url.blank? %>

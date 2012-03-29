@@ -270,6 +270,14 @@ class VideoSegment < ActiveRecord::Base
   def associate_topic topic
     self.topic_video_segments << TopicVideoSegment.create!(:topic => topic)
   end
+  
+  def description
+    # a little hacky - we may or may not have an associated alert
+    if (alert = Alert.find_by_video_segment_id(self.id))
+      return alert.body
+    end
+    self.video.description
+  end
 
   # For active scaffold
   def label
