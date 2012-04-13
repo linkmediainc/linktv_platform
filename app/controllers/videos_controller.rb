@@ -281,7 +281,9 @@ class VideosController < FrontEndController
     end
     
     @video_segments = []
-    @videos.each { |video| @video_segments.concat(video.video_segments) }
+    @videos.each do |video| 
+      @video_segments.concat(video.video_segments.select { |vs| vs.live? })
+    end
     unless @filtered_topic_ids.empty?
       topic_id_set = Set.new(@filtered_topic_ids)
       @video_segments = @video_segments.reject do |vs|
