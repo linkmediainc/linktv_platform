@@ -14,6 +14,6 @@
         - videos.each do |content|
           %tr
             %td.internal-video-title
-              %a{:target => "_blank", :href => admin_video_path(content.id)}= content.name
+              %a{:target => "_blank", :href => admin_video_path(content.video_id)}= content.name
             %td{:class => "internal-video-score", :style => "white-space: nowrap"}= content.canonical_date
             %td.internal-video-score= content.score
