@@ -43,7 +43,7 @@ class VideoSegment < ActiveRecord::Base
 
   named_scope :live,
     :joins => "INNER JOIN videos ON video_segments.video_id = videos.id",
-    :conditions=> ['videos.deleted = ? AND video_segments.active = ? AND video_segments.deleted = ?', 0, 1, 0]
+    :conditions=> ['videos.deleted = ? AND videos.published = ? AND video_segments.active = ? AND video_segments.deleted = ? AND video_segments.active = ?', 0, 1, 1, 0, 1]
 
   def live?; active && !deleted end
 
@@ -284,6 +284,10 @@ class VideoSegment < ActiveRecord::Base
   def label
     "#{self.video.name} - #{self.name}"
   end
+  
+  def live_related_internal_video_segments
+    VideoSegment.related_to_video_segments(self.id).live
+  end
 
   def load_contents_data
     self.view_data ||= {}
@@ -295,8 +299,7 @@ class VideoSegment < ActiveRecord::Base
       related_to_video_segments(self.id).
       include_thumbnail
 
-    self.view_data[:related_internal_video_segments] =
-      VideoSegment.related_to_video_segments(self.id)
+    self.view_data[:related_internal_video_segments] = self.live_related_internal_video_segments()
 
     # Note: This does not set a scope but loads the collection.
     # Necessary since we'll be filtering the results

@@ -27,7 +27,7 @@ class Admin::VideoSegmentsController < Admin::AdminController
       ordered
     @content_types = ContentType.live.ordered.find :all
     @semantic_apis = SemanticApi.live.find :all
-    @internal_videos = VideoSegment.related_to_video_segments(@video_segment.id)
+    @internal_videos = @video_segment.live_related_internal_video_segments()
     @segment_index = params[:segment_index]
 
     @external_contents_by_content_type_id =
