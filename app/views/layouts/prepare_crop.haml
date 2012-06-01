@@ -1,0 +1,16 @@
+%html{ :lang => "en", :xmlns => "http://www.w3.org/1999/xhtml" }
+  %head
+    %meta{ :content => "text/html; charset=utf-8", "http-equiv" => "Content-Type" }
+    %title Image Crop
+    = stylesheet_link_tag "#{LINKTV_PLATFORM_ASSETS_PATH}/stylesheets/web_app_theme"
+    = stylesheet_link_tag "#{LINKTV_PLATFORM_ASSETS_PATH}/stylesheets/warehouse_theme.css"
+    = stylesheet_link_tag "#{LINKTV_PLATFORM_ASSETS_PATH}/stylesheets/admin"
+    = stylesheet_link_tag "#{LINKTV_PLATFORM_ASSETS_PATH}/stylesheets/messages"
+    = stylesheet_link_tag "#{LINKTV_PLATFORM_ASSETS_PATH}/stylesheets/jquery.Jcrop.css"
+    = javascript_include_tag "https://ajax.googleapis.com/ajax/libs/jquery/1.4.3/jquery.min.js"
+    = javascript_include_tag "#{LINKTV_PLATFORM_ASSETS_PATH}/javascripts/jquery/jquery.Jcrop.js"
+    = javascript_include_tag "#{LINKTV_PLATFORM_ASSETS_PATH}/javascripts/admin/crop.js"
+    %style{:type => 'text/css'} .crop-body {margin-left:20px; margin-top: 20px} .top-margin {margin-top: 30px}
+  %body.crop-body
+
+    = yield
