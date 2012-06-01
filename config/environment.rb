@@ -36,7 +36,7 @@ module Linktv
       config.gem "delayed_job", :version => '2.0.7'
       config.gem "aws-s3", :version => '0.6.2', :lib => "aws/s3"
       config.gem "gd2", :version => '1.1.1'
-      config.gem "rmagick", :lib => 'RMagick', :version => '2.13.1' # another graphics library, to support cropping page
+      config.gem "RMagick", :lib => 'rmagick', :version => '2.13.1' # another graphics library, to support cropping page
       config.gem "rio", :version => '0.4.2'
       config.gem "searchlogic", :version => '2.4.25'
       config.gem 'sunspot_rails', :version => '1.2.1'
