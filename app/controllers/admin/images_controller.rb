@@ -5,18 +5,20 @@ class Admin::ImagesController < Admin::AdminController
   # Not DRY: copied from the applications app/models/mobile/summary.rb,
   # but should be defined in the plugin, somewhere.
   IMAGE_DIMENSIONS    = {
-    :small_or_related => {:width =>324, :height =>212},
-    :sidebar_or_doc   => {:width =>324, :height =>202},
-    :medium           => {:width =>324, :height =>303},
-    :x_large          => {:width =>654, :height =>443}
+    :small_or_related => {:width =>324.0, :height =>212.0},
+    :sidebar_or_doc   => {:width =>324.0, :height =>202.0},
+    :medium           => {:width =>324.0, :height =>303.0},
+    :x_large          => {:width =>654.0, :height =>443.0}
   }
   
   IMAGE_GROUPS = {
-    'square' => {"Home Screen Medium"  => IMAGE_DIMENSIONS[:medium]},
-    '16x9'   => {"Small/Related Video" => IMAGE_DIMENSIONS[:small_or_related],
-                 "Sidebar/Documentary" => IMAGE_DIMENSIONS[:sidebar_or_doc],
-                 "Lead Story"          => IMAGE_DIMENSIONS[:x_large]}
+    'square'    => {"Home Screen Medium"  => IMAGE_DIMENSIONS[:medium]},
+    'landscape' => {"Small/Related Video" => IMAGE_DIMENSIONS[:small_or_related],
+                    "Sidebar/Documentary" => IMAGE_DIMENSIONS[:sidebar_or_doc],
+                    "Lead Story"          => IMAGE_DIMENSIONS[:x_large]}
   }
+  
+  LEAD_STORY = 654.0 / 443
   
   before_filter :find_image, :only => [:show]
   def find_image
@@ -109,14 +111,58 @@ class Admin::ImagesController < Admin::AdminController
       # one or more fixed sizes, create those images.
       puts ">>>group #{params[:group]}:"
       group.each_key do |size|
+        # Get the eventual sizes used in the layout and save the
+        # URI. Fitting the user's crop into these dimensions will
+        # be done in two steps below.
         dim = group[size]
         sized_w = dim[:width]
         sized_h = dim[:height]
-        puts ">>>    #{size}: #{sized_w}x#{sized_h}"
         cropped_filename = "/thumbnail.width=#{sized_w},height=#{sized_h}#{suffix}"
-        cropped_and_sized = cropped.resize_to_fit(sized_w, sized_h)
-        cropped_and_sized.write(image.cache_dir + cropped_filename)
         uris << {:size => size, :uri => image.cache_path + cropped_filename}
+        
+        cur_aspect_ratio = (sized_w / sized_h)
+        
+        if cur_aspect_ratio < LEAD_STORY
+
+          # The current is taller than the preferred aspect ratio.
+          # Resize to slightly wider than current (preserving aspect
+          # ratio), then cut off excess from sides.
+          resized = cropped.change_geometry("x#{sized_h}") do |cols, rows, img|
+            img.resize!(cols, rows)
+          end
+
+          # Need to write out the intermediate result, because
+          # RMagick performs the second crop incorrectly.
+          tmp_filename = image.cache_dir + "tmp.jpg" 
+          resized.write(tmp_filename)
+          t = Magick::ImageList.new(tmp_filename)
+          t.crop!(Magick::NorthGravity, sized_w, t.rows)
+          t.write(image.cache_dir + cropped_filename)
+
+        elsif cur_aspect_ratio > LEAD_STORY
+
+          # The current is wider than the preferred aspect ratio.
+          # Resize to slightly taller than current (preserving aspect
+          # ratio), then cut off excess from top and bottom.
+          resized = cropped.change_geometry("#{sized_w}x") do |cols, rows, img|
+            img.resize!(cols, rows)
+          end
+          
+          # Need to write out the intermediate result, because
+          # RMagick performs the second crop incorrectly.
+          tmp_filename = image.cache_dir + "tmp.jpg" 
+          resized.write(tmp_filename)
+          t = Magick::ImageList.new(tmp_filename)
+          t.crop!(Magick::NorthGravity, t.columns, sized_h)
+          t.write(image.cache_dir + cropped_filename)
+          
+        else 
+          # The apsect ratio is the preferred one. A simple resize
+          # suffices in this case.
+          cropped_and_sized = cropped.resize(sized_w, sized_h)
+          cropped_and_sized.write(image.cache_dir + cropped_filename)
+        end
+
       end
     else
       # No group, so simply create the image with the requested crop and

@@ -2,12 +2,12 @@ jQuery(function($) {
 
   const MIN_NONE      = [0, 0]
 
-  const RATIO_SQUARE  = (324 / 303) // strictly speaking, not really.
-  const MIN_SQUARE    = [324, 303]
-  const RATIO_4x3     = (4 / 3)
-  const MIN_4x3       = MIN_NONE   // Might change if 4x3 gets used.
-  const RATIO_16x9    = (16 / 9)
-  const MIN_16x9      = [376, 212] // This is closer to 16x9 than any of the actual images
+  const RATIO_SQUARE    = (324 / 303) // strictly speaking, not really.
+  const MIN_SQUARE      = [324, 303]
+  const RATIO_4x3       = (4 / 3)
+  const MIN_4x3         = MIN_NONE   // Might change if 4x3 gets used.
+  const RATIO_LANDSCAPE = (654 / 443)
+  const MIN_LANDSCAPE   = [654/2, 443/2]
 
   var jcrop_api, x, y, w, h, group, cur_aspect_ratio, cur_min_size;
 
@@ -49,9 +49,9 @@ jQuery(function($) {
           cur_min_size     = MIN_SQUARE;
           break;
 
-      case '16x9':
-          cur_aspect_ratio = RATIO_16x9;
-          cur_min_size     = MIN_16x9;
+      case 'landscape':
+          cur_aspect_ratio = RATIO_LANDSCAPE;
+          cur_min_size     = MIN_LANDSCAPE;
           break;
 
       default:
@@ -93,7 +93,7 @@ jQuery(function($) {
   
     });
 
-  $('#16x9').click(
+  $('#landscape').click(
 	function() {
 		// This ratio is used at several sizes.
 		jcrop_api.release();
@@ -104,7 +104,9 @@ jQuery(function($) {
     });
 
   $('#crop').click(
-    function() {	
+    function() {
+	console.log(w + " " + h + " " + group)
+	
     jQuery.post("/admin/images/" + $('#crop').attr('image_id') + "/crop",
        { x: x, y: y, w: w, h: h, group: group},
        function (data, textStatus, jqXHR)

@@ -2,8 +2,8 @@
 %p.top-margin
   %input#square{:type => "radio", :name => "group",  :checked => "true"}
   %label square
-  %input#16x9{:type => "radio", :name => "group"}
-  %label 16x9
+  %input#landscape{:type => "radio", :name => "group"}
+  %label landscape
   %button#crop{:disabled => "true", :image_id => @image_id} Crop
 
 %img#original{:src => @image_uri}
