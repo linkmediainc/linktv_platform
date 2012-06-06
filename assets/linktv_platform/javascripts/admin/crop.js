@@ -8,6 +8,8 @@ jQuery(function($) {
   const MIN_4x3         = MIN_NONE   // Might change if 4x3 gets used.
   const RATIO_LANDSCAPE = (654 / 443)
   const MIN_LANDSCAPE   = [654/2, 443/2]
+  const RATIO_16x9      = (16 / 9)
+  const MIN_16x9        = [655/2, 368/2]
 
   var jcrop_api, x, y, w, h, group, cur_aspect_ratio, cur_min_size;
 
@@ -54,6 +56,11 @@ jQuery(function($) {
           cur_min_size     = MIN_LANDSCAPE;
           break;
 
+      case '16x9':
+          cur_aspect_ratio = RATIO_16x9;
+          cur_min_size     = MIN_16x9;
+	      break;
+	
       default:
           cur_aspect_ratio = 0;
           cur_min_size     = MIN_NONE;
@@ -101,6 +108,16 @@ jQuery(function($) {
 		jcrop_api.setOptions({aspectRatio: cur_aspect_ratio,
 			                  minSize: cur_min_size});
     
+    });
+
+  $('#16x9').click(
+	function() {
+		// This ratio is used at several sizes.
+		jcrop_api.release();
+		getConstraintsForCurCrop()
+		jcrop_api.setOptions({aspectRatio: cur_aspect_ratio,
+			                  minSize: cur_min_size});
+
     });
 
   $('#crop').click(

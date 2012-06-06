@@ -1,9 +1,11 @@
 %h2 Original
 %p.top-margin
   %input#square{:type => "radio", :name => "group",  :checked => "true"}
-  %label square
+  %label square (app only)
   %input#landscape{:type => "radio", :name => "group"}
-  %label landscape
+  %label landscape (app only)
+  %input#16x9{:type => "radio", :name => "group"}
+  %label 16x9 (app story, web)
   %button#crop{:disabled => "true", :image_id => @image_id} Crop
 
 %img#original{:src => @image_uri}

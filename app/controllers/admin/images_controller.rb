@@ -5,20 +5,30 @@ class Admin::ImagesController < Admin::AdminController
   # Not DRY: copied from the applications app/models/mobile/summary.rb,
   # but should be defined in the plugin, somewhere.
   IMAGE_DIMENSIONS    = {
-    :small_or_related => {:width =>324.0, :height =>212.0},
-    :sidebar_or_doc   => {:width =>324.0, :height =>202.0},
-    :medium           => {:width =>324.0, :height =>303.0},
-    :x_large          => {:width =>654.0, :height =>443.0}
+    :small_or_related     => {:width =>324.0, :height =>212.0},
+    :sidebar_or_doc       => {:width =>324.0, :height =>202.0},
+    :medium               => {:width =>324.0, :height =>303.0},
+    :x_large              => {:width =>654.0, :height =>443.0},
+    :story_video          => {:width =>655.0, :height =>368.0},
+    :story_video_list     => {:width =>82.0,  :height =>47.0},
+    :story_video_timeline => {:width =>183.0, :height =>103.0},
   }
   
   IMAGE_GROUPS = {
-    'square'    => {"Home Screen Medium"  => IMAGE_DIMENSIONS[:medium]},
-    'landscape' => {"Small/Related Video" => IMAGE_DIMENSIONS[:small_or_related],
-                    "Sidebar/Documentary" => IMAGE_DIMENSIONS[:sidebar_or_doc],
-                    "Lead Story"          => IMAGE_DIMENSIONS[:x_large]}
+    'square'    => {"Home Screen Medium"   => IMAGE_DIMENSIONS[:medium]},
+    'landscape' => {"Small/Related Video"  => IMAGE_DIMENSIONS[:small_or_related],
+                    "Sidebar/Documentary"  => IMAGE_DIMENSIONS[:sidebar_or_doc],
+                    "Lead Story"           => IMAGE_DIMENSIONS[:x_large]},
+    '16x9'      => {"Story Video"          => IMAGE_DIMENSIONS[:story_video],
+                    "Story Video List"     => IMAGE_DIMENSIONS[:story_video_list],
+                    "Story Video Timeline" => IMAGE_DIMENSIONS[:story_video_timeline]}
   }
   
-  LEAD_STORY = 654.0 / 443
+  IMAGE_GROUP_PREFERRED_ASPECT_RATIOS = {'square' => 324.0 / 303.0,
+                                         'landscape' => 654.0 / 443.0,
+                                         '16x9'        => 16.0 / 9.0}
+  RATIO_LEAD_STORY = 654.0 / 443.0
+  RATIO_16x9       = 16.0 / 9.0 
   
   before_filter :find_image, :only => [:show]
   def find_image
@@ -102,14 +112,29 @@ class Admin::ImagesController < Admin::AdminController
     suffix     = match_data[1]
     FileUtils.mkdir_p image.cache_dir unless File.exist?(image.cache_dir)
     
+    uris = self.class.create_images(cropped, params[:group],
+                                    image.cache_dir, image.cache_path,
+                                    suffix)
+  
+    # "uris" is an array of hashes, which isn't handled correctly by
+    #  the "render :json => <something>" construct used in other contexts.
+   render :text => uris.to_json
+   
+  end
+
+  private
+
+  def self.create_images(cropped, group_name, cache_dir, cache_path, suffix)
+
     # The list of created images are returned as a JSON-encoded list.
     uris  = []
-      
-    group = IMAGE_GROUPS[params[:group]]
+
+    group              = IMAGE_GROUPS[group_name]
+    group_aspect_ratio = IMAGE_GROUP_PREFERRED_ASPECT_RATIOS[group_name]
     if group
       # If the user specified a "group"--an access ratio that should exist at
       # one or more fixed sizes, create those images.
-      puts ">>>group #{params[:group]}:"
+      puts ">>>group #{group_name}"
       group.each_key do |size|
         # Get the eventual sizes used in the layout and save the
         # URI. Fitting the user's crop into these dimensions will
@@ -118,11 +143,11 @@ class Admin::ImagesController < Admin::AdminController
         sized_w = dim[:width]
         sized_h = dim[:height]
         cropped_filename = "/thumbnail.width=#{sized_w},height=#{sized_h}#{suffix}"
-        uris << {:size => size, :uri => image.cache_path + cropped_filename}
-        
+        uris << {:size => size, :uri => cache_path + cropped_filename}
+
         cur_aspect_ratio = (sized_w / sized_h)
-        
-        if cur_aspect_ratio < LEAD_STORY
+
+        if cur_aspect_ratio < group_aspect_ratio
 
           # The current is taller than the preferred aspect ratio.
           # Resize to slightly wider than current (preserving aspect
@@ -133,13 +158,13 @@ class Admin::ImagesController < Admin::AdminController
 
           # Need to write out the intermediate result, because
           # RMagick performs the second crop incorrectly.
-          tmp_filename = image.cache_dir + "tmp.jpg" 
+          tmp_filename = cache_dir + "tmp.jpg" 
           resized.write(tmp_filename)
           t = Magick::ImageList.new(tmp_filename)
           t.crop!(Magick::NorthGravity, sized_w, t.rows)
-          t.write(image.cache_dir + cropped_filename)
+          t.write(cache_dir + cropped_filename)
 
-        elsif cur_aspect_ratio > LEAD_STORY
+        elsif cur_aspect_ratio > group_aspect_ratio
 
           # The current is wider than the preferred aspect ratio.
           # Resize to slightly taller than current (preserving aspect
@@ -147,20 +172,20 @@ class Admin::ImagesController < Admin::AdminController
           resized = cropped.change_geometry("#{sized_w}x") do |cols, rows, img|
             img.resize!(cols, rows)
           end
-          
+
           # Need to write out the intermediate result, because
           # RMagick performs the second crop incorrectly.
-          tmp_filename = image.cache_dir + "tmp.jpg" 
+          tmp_filename = cache_dir + "tmp.jpg" 
           resized.write(tmp_filename)
           t = Magick::ImageList.new(tmp_filename)
           t.crop!(Magick::NorthGravity, t.columns, sized_h)
-          t.write(image.cache_dir + cropped_filename)
-          
+          t.write(cache_dir + cropped_filename)
+
         else 
-          # The apsect ratio is the preferred one. A simple resize
+          # The aspect ratio is the preferred one. A simple resize
           # suffices in this case.
           cropped_and_sized = cropped.resize(sized_w, sized_h)
-          cropped_and_sized.write(image.cache_dir + cropped_filename)
+          cropped_and_sized.write(cache_dir + cropped_filename)
         end
 
       end
@@ -168,15 +193,13 @@ class Admin::ImagesController < Admin::AdminController
       # No group, so simply create the image with the requested crop and
       # store that.
       cropped_filename = "/thumbnail.width=#{w},height=#{h}#{suffix}"
-      cropped.write(image.cache_dir + cropped_filename)
-      uri = image.cache_path + cropped_filename
+      cropped.write(cache_dir + cropped_filename)
+      uri = cache_path + cropped_filename
       sig = md5_signature(uri)
       uris << {:size => 'user-specified', :uri => "#{uri}?sig=#{sig}"}
     end
-  
-  # "uris" is an array of hashes, which isn't handled correctly by
-  #  the "render :json => <something>" construct used in other contexts.
-  render :text => uris.to_json
+
+  uris
   end
 
 end
