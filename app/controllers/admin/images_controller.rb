@@ -153,7 +153,7 @@ class Admin::ImagesController < Admin::AdminController
           # Resize to slightly wider than current (preserving aspect
           # ratio), then cut off excess from sides.
           resized = cropped.change_geometry("x#{sized_h}") do |cols, rows, img|
-            img.resize!(cols, rows)
+            img.resize(cols, rows)
           end
 
           # Need to write out the intermediate result, because
@@ -170,7 +170,7 @@ class Admin::ImagesController < Admin::AdminController
           # Resize to slightly taller than current (preserving aspect
           # ratio), then cut off excess from top and bottom.
           resized = cropped.change_geometry("#{sized_w}x") do |cols, rows, img|
-            img.resize!(cols, rows)
+            img.resize(cols, rows)
           end
 
           # Need to write out the intermediate result, because
