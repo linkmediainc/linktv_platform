@@ -26,6 +26,8 @@ class TopicVideoSegment < ActiveRecord::Base
       {:entity_identifiers => [:entity_db]}
     ]}
   ]
+  
+  named_scope :visible, :conditions => 'visible = 1'
 
   def before_validation_on_create
     self.score ||= self.class.default_score

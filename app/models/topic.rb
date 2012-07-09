@@ -69,7 +69,7 @@ class Topic < ActiveRecord::Base
 
   # available on front-end
   named_scope :public, {
-    :conditions => "topic_video_segments.score >= 0"
+    :conditions => "topic_video_segments.score >= 0 and topic_video_segments.visible = 1"
   }
 
   named_scope :related_to_topics, lambda {|topic_ids|

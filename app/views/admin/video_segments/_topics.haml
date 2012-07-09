@@ -8,10 +8,11 @@
             %th.topic Topic
             %th.score Weight
             %th.actions
+            %th.visible
         %tbody.segment-topics-body.current-segment-topics
           -# Dummy row to ensure the body tag exists in the DOM
           %tr{:style => 'display: none'}
-            %td{:colspan => 3}
+            %td{:colspan => 4}
           -# Render the collection of topic_video_segments
           - unless is_model
             - segment_form.fields_for :topic_video_segments, topic_video_segments do |topic_video_segment_form|
