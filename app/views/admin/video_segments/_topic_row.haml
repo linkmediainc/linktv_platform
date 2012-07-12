@@ -16,6 +16,7 @@
         = topic_video_segment_form.hidden_field :_destroy, :class => 'destroy', :disabled => disabled
       = topic_video_segment_form.hidden_field :topic_id, :disabled => disabled
       = topic_video_segment_form.hidden_field :semantic_api_id, :disabled => disabled
+      = topic_video_segment_form.hidden_field :visible, :class => 'visible', :disabled => disabled
 
   %td.score
     - score = (tvs && tvs.score || TopicVideoSegment.default_score).to_i
@@ -28,3 +29,6 @@
   %td.actions
     %a.delete-topic.icon{:href => '#', :title => "Delete topic association"}
       = icon :'icon-delete'
+  %td.visible
+    = link_to image_tag('/images/visible.png', :class => (tvs.visible? ? '' : 'lighter')), 'javascript:void(0);', :id => "#{topic.id}_visible", :class => 'visible-icon'
+
