@@ -320,6 +320,27 @@ var VideoEdit = {
       });
       return false;
 
+    }).delegate('a.visible-icon', 'click', function(event) {
+      var target = $j(this);
+      var visibleField = target.parent().siblings(".topic").children('input.visible');
+      if (visibleField == null) {
+        return false;
+      }
+      visibleField.val(visibleField.val() == '1' ? '0' : '1');
+      target.children('img').toggleClass('dim-image');
+      return false;
+
+    }).delegate('a.query-topics', 'operation-handle', function(event) {
+      var target = $j(this);
+      setTimeout(function() {
+        VideoEditTopics.query(target, {
+          complete: function() {
+            $j(target).trigger('operation-end', event);
+          }
+        });
+      });
+      return false;
+
     }).delegate('a.query-topics', 'operation-handle', function(event) {
       var target = $j(this);
       setTimeout(function() {

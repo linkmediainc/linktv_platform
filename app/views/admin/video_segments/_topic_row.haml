@@ -30,5 +30,5 @@
     %a.delete-topic.icon{:href => '#', :title => "Delete topic association"}
       = icon :'icon-delete'
   %td.visible
-    = link_to image_tag('/images/visible.png', :class => (tvs.visible? ? '' : 'lighter')), 'javascript:void(0);', :id => "#{topic.id}_visible", :class => 'visible-icon'
+    = link_to image_tag('/images/visible.png', :class => (tvs.visible? ? '' : 'dim-image')), 'javascript:void(0);', :id => "#{topic.id}_visible", :class => 'visible-icon'
 
