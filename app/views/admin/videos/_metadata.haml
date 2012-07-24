@@ -47,7 +47,7 @@
         .in-place-edit-field
           -# input will be enabled if a standard form upload is to be used
           = video_form.file_field :thumbnail, :class => 'in-place-edit-field', :accept => APP_CONFIG[:thumbnails][:input_accept], :disabled => true
-          = link_to 'Crop', "/admin/images/#{@video.thumbnail.id}/prepare_crop" if @video.has_thumbnail?
+          = link_to('Crop', "/admin/images/#{@video.thumbnail.id}/prepare_crop", :target => '_blank') if @video.has_thumbnail?
           .image-attribution
             .label Image Attribution:
             = video_form.text_field :thumbnail_attribution, :size => 60, :value => @video.thumbnail_attribution
