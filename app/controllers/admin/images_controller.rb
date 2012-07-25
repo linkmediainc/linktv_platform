@@ -164,8 +164,11 @@ class Admin::ImagesController < Admin::AdminController
         # been nice, but the aspect ratios are numerous and non-standard. Attempts
         # at getting a good default crop out of the existing ThumbnailGenerator
         #  mechanism were unsuccessful.
-        img_options = (size =~ /^Web/) ? ',crop=center,grow=1' : ''
-        cropped_filename = "/thumbnail.width=#{sized_w.to_i},height=#{sized_h.to_i}#{img_options}#{suffix}"
+        if (size =~ /^Web/)
+          cropped_filename = "/thumbnail.crop=center,width=#{sized_w.to_i},height=#{sized_h.to_i},grow=1#{suffix}"
+        else
+          cropped_filename = "/thumbnail.width=#{sized_w.to_i},height=#{sized_h.to_i}#{suffix}"
+        end
         uris << {:size => size, :uri => cache_path + cropped_filename}
 
         cur_aspect_ratio = (sized_w / sized_h)
