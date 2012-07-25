@@ -160,10 +160,11 @@ class Admin::ImagesController < Admin::AdminController
         # We want web image URLs to match the URLs already sent by the server.
         # This allows images to have the same URL whether they were cropped
         # administratively or have a default cropping and requires no change
-        # to the existing web code. For the app, the same flexibility is required,
-        # but because the aspect ratios are numerous and non-standard, additional
-        # parameters are needed.
-        img_options = (size =~ /^Web/) ? ',crop=center,grow=1' : ',crop=center,rw=1,rh=1,grow=1'
+        # to the existing web code. For the app, the same flexibility would have
+        # been nice, but the aspect ratios are numerous and non-standard. Attempts
+        # at getting a good default crop out of the existing ThumbnailGenerator
+        #  mechanism were unsuccessful.
+        img_options = (size =~ /^Web/) ? ',crop=center,grow=1' : ''
         cropped_filename = "/thumbnail.width=#{sized_w.to_i},height=#{sized_h.to_i}#{img_options}#{suffix}"
         uris << {:size => size, :uri => cache_path + cropped_filename}
 
