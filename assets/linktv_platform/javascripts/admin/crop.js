@@ -10,6 +10,7 @@ jQuery(function($) {
   const MIN_LANDSCAPE   = [654/2, 443/2]
   const RATIO_16x9      = (16 / 9)
   const MIN_16x9        = [655/2, 368/2]
+  const MAX_W_IN_TOOL   = 1024
 
   var jcrop_api, x, y, w, h, group, cur_aspect_ratio, cur_min_size;
 
@@ -20,8 +21,10 @@ jQuery(function($) {
 	// The initial option settings.
     onSelect: updateCropDimensions,
     onRelease: disableCropButton,
+    onDblClick: performCrop,
     aspectRatio: cur_aspect_ratio,
-    minSize: cur_min_size
+    minSize: cur_min_size,
+	boxWidth: MAX_W_IN_TOOL
   }, function() {
     // This is the "ready" callback for JCrop.
     jcrop_api = this;
@@ -87,6 +90,29 @@ jQuery(function($) {
        $('#crop').attr('disabled', 'true')
   }
 
+  function performCrop() {
+	console.log(w + " " + h + " " + group)
+
+    jQuery.post("/admin/images/" + $('#crop').attr('image_id') + "/crop",
+     { x: x, y: y, w: w, h: h, group: group},
+     function (data, textStatus, jqXHR)
+     {
+		$('#results').html('')
+	      div_text = ""
+		  images = JSON.parse(data)
+		  for (i = 0; i < images.length; i++)
+		  {
+			div_text += ("<h3 class=\"top-margin\">" + images[i].size + "</h3>" +
+			            "<img src=\"" + images[i].uri + "\"/><br>" +
+						images[i].uri + "<br>")
+        }
+        $('#results').html(div_text)
+     });
+
+	jcrop_api.release()
+
+  }
+
   $('#square').click(
 	function() {
 		
@@ -120,26 +146,6 @@ jQuery(function($) {
 
     });
 
-  $('#crop').click(
-    function() {
-	console.log(w + " " + h + " " + group)
-	
-    jQuery.post("/admin/images/" + $('#crop').attr('image_id') + "/crop",
-       { x: x, y: y, w: w, h: h, group: group},
-       function (data, textStatus, jqXHR)
-       {
-	      div_text = ""
-		  images = JSON.parse(data)
-		  for (i = 0; i < images.length; i++)
-		  {
-			div_text += ("<h3 class=\"top-margin\">" + images[i].size + "</h3>" +
-			            "<img src=\"" + images[i].uri + "\"/><br>" +
-						images[i].uri + "<br>")
-          }
-          $('#results').html(div_text)
-       });
-	jcrop_api.release();
-	
-   });
+  $('#crop').click(performCrop);
 
 });
