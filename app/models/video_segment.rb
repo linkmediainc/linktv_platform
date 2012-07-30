@@ -79,14 +79,16 @@ class VideoSegment < ActiveRecord::Base
       :select => "video_segments.*, #{self.match_score} score",
       :joins => VideoSegment.inner_joins(:topics) + [
         "INNER JOIN topic_video_segments tvs2 ON tvs2.topic_id = topic_video_segments.topic_id",
-        "INNER JOIN video_segments video_segments2 ON video_segments2.id = tvs2.video_segment_id"],
+        "INNER JOIN video_segments video_segments2 ON video_segments2.id = tvs2.video_segment_id",
+        "INNER JOIN videos v on topic_video_segments.video_id = v.id"],
       :conditions => [
         "topic_video_segments.score >= 0 AND tvs2.score >= 0 AND " +
-        "video_segments.id NOT IN (?) AND video_segments2.id IN (?)",
+        "video_segments.id NOT IN (?) AND video_segments2.id IN (?) AND " +
+        "topic_video_segments.score >= 0.6",
         video_segment_ids, video_segment_ids],
-      :order => 'score DESC',
+      :order => 'videos.source_published_at DESC, score DESC',
       :group => 'video_segments.id',
-      :limit => 20
+      :limit => 10
     }
   }
 
