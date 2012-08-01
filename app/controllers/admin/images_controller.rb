@@ -18,6 +18,7 @@ class Admin::ImagesController < Admin::AdminController
     :web_medium           => {:width => 304.0, :height => 171.0},
     :web_large            => {:width => 624.0, :height => 351.0},
     :web_x_large          => {:width => 640.0, :height => 360.0},
+    :rss                  => {:width => 480.0, :height => 360.0},
   }
   
   IMAGE_GROUPS = {
@@ -119,9 +120,14 @@ class Admin::ImagesController < Admin::AdminController
     cropped = orig.crop(params[:x].to_i, params[:y].to_i, w, h)
     
     # Filesystem housekeeping: remember the filename suffix and
-    # ensure the existence of the cache directory.
+    # ensure the existence of the cache directory. Normalize the
+    # suffix for JPEG images. Sometimes imported filenames have a
+    # .jpeg suffix, but the website frequently uses its default,
+    # which is .jpg.
     match_data = /(\.[^.]*)$/.match(image.pathname)
     suffix     = match_data[1]
+    suffix = '.jpg' if (suffix == '.jpeg')
+    
     FileUtils.mkdir_p image.cache_dir unless File.exist?(image.cache_dir)
     
     uris = self.class.create_images(cropped, params[:group],
@@ -163,12 +169,15 @@ class Admin::ImagesController < Admin::AdminController
         # to the existing web code. For the app, the same flexibility would have
         # been nice, but the aspect ratios are numerous and non-standard. Attempts
         # at getting a good default crop out of the existing ThumbnailGenerator
-        #  mechanism were unsuccessful.
-        if (size =~ /^Web/)
-          cropped_filename = "/thumbnail.crop=center,width=#{sized_w.to_i},height=#{sized_h.to_i},grow=1#{suffix}"
-        else
-          cropped_filename = "/thumbnail.width=#{sized_w.to_i},height=#{sized_h.to_i}#{suffix}"
-        end
+        # mechanism were unsuccessful.
+        #
+        # Another note, the order for the arguments in images for the web is
+        # is defined in linktv_platform/app/helpers/images_helper.rb (in the
+        # thumbnail_url method). The order specified here is the same, so that
+        # administratively cropped images can replace auto-generated ones, or
+        # prevent their creation.
+        extra_args = (size =~ /^Web/) ? ',grow=1,crop=center' : ''
+        cropped_filename = "/thumbnail.width=#{sized_w.to_i},height=#{sized_h.to_i}#{extra_args}#{suffix}"
         uris << {:size => size, :uri => cache_path + cropped_filename}
 
         cur_aspect_ratio = (sized_w / sized_h)
@@ -212,6 +221,40 @@ class Admin::ImagesController < Admin::AdminController
           # suffices in this case.
           cropped_and_sized = cropped.resize(sized_w, sized_h)
           cropped_and_sized.write(cache_dir + cropped_filename)
+          
+          # Exceptional case: www.linktv.org has a homepage section that
+          # features videos from the news site that it gets from an RSS
+          # feed. It creates an image based on the image URL in that feed,
+          # which is a 4x3 image. The www site presumably knows the proper
+          # transformation from a 4x3 image to the dimensions it uses. The
+          # idea is that this code takes the largest of the 16x9 crops and
+          # creates a 4x3 from that. This is probably no worse than crops
+          # created before the crop tool, because 16x9 crops were done
+          # before importing into this system, and the additional processing
+          # done when the images were transferred from news to www were 
+          # considered acceptable.
+          #
+          # This is a more rudimentary aspect ratio change. Rather than
+          # increasing the size of the image and trimming the excess in an
+          # attempt to preserve the aspect ratio of the requested crop,
+          # this just cuts off the sides. No shrinking is done because the
+          # height of the 16x9 and the 4x3 happen to be the same.
+    
+          if (size == "Web Extra Large")
+            w_4x3 = IMAGE_DIMENSIONS[:rss][:width]
+            h_4x3 = IMAGE_DIMENSIONS[:rss][:height]
+            derived_4x3_filename = "/thumbnail.width=#{w_4x3.to_i}," +
+                                   "height=#{h_4x3.to_i}#{suffix}"
+            
+            # "cropped_filename" is the name of the just-created 16x9, which
+            # is the basis of this 4x3 image.
+            cropped_4x3 = Magick::ImageList.new(cache_dir + cropped_filename)            
+            cropped_4x3.crop!(Magick::CenterGravity, w_4x3, sized_h)
+            cropped_4x3.write(cache_dir + derived_4x3_filename) #tmp_filename
+            
+             uris << {:size => 'RSS', :uri => cache_path + derived_4x3_filename}
+          end
+          
         end
 
       end

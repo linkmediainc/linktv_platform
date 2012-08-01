@@ -5,17 +5,24 @@ module ImagesHelper
   end
   
   def thumbnail_url image, args = {}
-    params = {}
+    params = []
     [:width, :height, :rw, :rh, :grow, :crop, :mask, :desaturate].each do |key|
+      
+      value = nil
       if args[key]
-        params[key] = args[key]
+        value = args[key]
       elsif APP_CONFIG[:thumbnails][:default][key].present?
-        params[key] = APP_CONFIG[:thumbnails][:default][key]
+        value = APP_CONFIG[:thumbnails][:default][key]
       end
+      
+      if !value.nil?
+        params << "#{key}=#{value}"
+      end
+      
     end
 
-    options_str = params.collect{|k, v| "#{k}=#{v}"}.join(',')
-
+    options_str = params.join(',')
+    
     if image.nil?
       sig = md5_signature image_not_available_path(args)
       path = (args[:only_path] || nil) ? image_not_available_path(args) : image_not_available_url(args)
