@@ -299,6 +299,7 @@ class VideoSegment < ActiveRecord::Base
   #   - return the two result sets as a single array
   def live_related_internal_video_segments
     segments = Array(VideoSegment.related_to_video_segments(self.id).live)
+    return segments if segments.nil? || segments.empty?
     segments.reject! { |segment| segment.score.to_f < 50 }
     cutoff = segments.first.score.to_f * 0.6
     (top_results, bottom_results) = segments.partition { |segment| segment.score.to_f >= cutoff }
