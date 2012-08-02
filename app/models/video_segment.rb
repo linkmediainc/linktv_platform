@@ -300,8 +300,6 @@ class VideoSegment < ActiveRecord::Base
     segments = Array(VideoSegment.related_to_video_segments(self.id).live)
     cutoff = segments.first.score.to_f * 0.6
     (top_results, bottom_results) = segments.partition { |segment| segment.score.to_f >= cutoff }
-    p top_results.map { |r| "#{r.name}:#{r.score}"}
-    p bottom_results.map { |r| "#{r.name}:#{r.score}"}
     top_results.sort! { |s1, s2| s2.source_published_at <=> s1.source_published_at }
     bottom_results.sort! { |s1, s2| s2.score.to_f <=> s1.score.to_f }
     return top_results + bottom_results
