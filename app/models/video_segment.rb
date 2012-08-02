@@ -91,7 +91,7 @@ class VideoSegment < ActiveRecord::Base
         video_segment_ids, video_segment_ids],
       :order => 'score DESC',
       :group => 'video_segments.id',
-      :limit => 10
+      :limit => 20
     }
   }
 
@@ -292,14 +292,19 @@ class VideoSegment < ActiveRecord::Base
   
   # This should be the usual call for getting related internal videos. In a nutshell, the
   # algorithm is this:
-  #   - get the top 10 most relevant results (returned from related_to_video_segments scope)
-  #   - eliminate any results whose score is less than 60% of the top score
-  #   - source those results in order of recency
+  #   - get the top 20 most relevant results (returned from related_to_video_segments scope)
+  #   - sort the results within 60% by recency
+  #   - sort the rest of the results by relevance (score)
+  #   - return the two result sets as a single array
   def live_related_internal_video_segments
     segments = Array(VideoSegment.related_to_video_segments(self.id).live)
     cutoff = segments.first.score.to_f * 0.6
-    segments.reject! { |segment| segment.score.to_f < cutoff }
-    segments.sort { |s1, s2| s2.source_published_at <=> s1.source_published_at }
+    (top_results, bottom_results) = segments.partition { |segment| segment.score.to_f >= cutoff }
+    p top_results.map { |r| "#{r.name}:#{r.score}"}
+    p bottom_results.map { |r| "#{r.name}:#{r.score}"}
+    top_results.sort! { |s1, s2| s2.source_published_at <=> s1.source_published_at }
+    bottom_results.sort! { |s1, s2| s2.score.to_f <=> s1.score.to_f }
+    return top_results + bottom_results
   end
 
   def load_contents_data
