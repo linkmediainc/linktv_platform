@@ -74,19 +74,22 @@ class VideoSegment < ActiveRecord::Base
   # the scores for all the matches for a set of segments.
   # Caller should include videos and check for availability as necessary
   # i.e. VideoSegment.related_to_video_segments([1,2]).join_video.available(226)
+  #
+  # NOTE: you probably don't want to call this directly - our related internal video 
+  # algorithm actually requires a bit of post-processing. In most cases, you should call
+  # live_related_internal_video_segments (below)
   named_scope :related_to_video_segments, lambda {|video_segment_ids|
     {
-      :select => "video_segments.*, #{self.match_score} score",
+      :select => "video_segments.*, v.source_published_at as source_published_at, #{self.match_score} score",
       :joins => VideoSegment.inner_joins(:topics) + [
         "INNER JOIN topic_video_segments tvs2 ON tvs2.topic_id = topic_video_segments.topic_id",
         "INNER JOIN video_segments video_segments2 ON video_segments2.id = tvs2.video_segment_id",
         "INNER JOIN videos v on topic_video_segments.video_id = v.id"],
       :conditions => [
         "topic_video_segments.score >= 0 AND tvs2.score >= 0 AND " +
-        "video_segments.id NOT IN (?) AND video_segments2.id IN (?) AND " +
-        "topic_video_segments.score >= 0.6",
+        "video_segments.id NOT IN (?) AND video_segments2.id IN (?)",
         video_segment_ids, video_segment_ids],
-      :order => 'videos.source_published_at DESC, score DESC',
+      :order => 'score DESC',
       :group => 'video_segments.id',
       :limit => 10
     }
@@ -287,8 +290,16 @@ class VideoSegment < ActiveRecord::Base
     "#{self.video.name} - #{self.name}"
   end
   
+  # This should be the usual call for getting related internal videos. In a nutshell, the
+  # algorithm is this:
+  #   - get the top 10 most relevant results (returned from related_to_video_segments scope)
+  #   - eliminate any results whose score is less than 60% of the top score
+  #   - source those results in order of recency
   def live_related_internal_video_segments
-    VideoSegment.related_to_video_segments(self.id).live
+    segments = Array(VideoSegment.related_to_video_segments(self.id).live)
+    cutoff = segments.first.score.to_f * 0.6
+    segments.reject! { |segment| segment.score.to_f < cutoff }
+    segments.sort { |s1, s2| s2.source_published_at <=> s1.source_published_at }
   end
 
   def load_contents_data
