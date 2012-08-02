@@ -293,11 +293,13 @@ class VideoSegment < ActiveRecord::Base
   # This should be the usual call for getting related internal videos. In a nutshell, the
   # algorithm is this:
   #   - get the top 20 most relevant results (returned from related_to_video_segments scope)
+  #   - remove any results with a score of < 50
   #   - sort the results within 60% by recency
   #   - sort the rest of the results by relevance (score)
   #   - return the two result sets as a single array
   def live_related_internal_video_segments
     segments = Array(VideoSegment.related_to_video_segments(self.id).live)
+    segments.reject! { |segment| segment.score.to_f < 50 }
     cutoff = segments.first.score.to_f * 0.6
     (top_results, bottom_results) = segments.partition { |segment| segment.score.to_f >= cutoff }
     top_results.sort! { |s1, s2| s2.source_published_at <=> s1.source_published_at }
