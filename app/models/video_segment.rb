@@ -80,7 +80,9 @@ class VideoSegment < ActiveRecord::Base
   # live_related_internal_video_segments (below)
   named_scope :related_to_video_segments, lambda {|video_segment_ids|
     {
-      :select => "video_segments.*, v.source_published_at as source_published_at, #{self.match_score} score",
+      # we're grabbing source_published_at as well as published_at because source_published_at
+      # is sometimes nil, for unknown reasons
+      :select => "video_segments.*, v.source_published_at as source_published_at, v.published_at as published_at, #{self.match_score} score",
       :joins => VideoSegment.inner_joins(:topics) + [
         "INNER JOIN topic_video_segments tvs2 ON tvs2.topic_id = topic_video_segments.topic_id",
         "INNER JOIN video_segments video_segments2 ON video_segments2.id = tvs2.video_segment_id",
@@ -303,7 +305,7 @@ class VideoSegment < ActiveRecord::Base
     segments.reject! { |segment| segment.score.to_f < 50 }
     cutoff = segments.first.score.to_f * 0.6
     (top_results, bottom_results) = segments.partition { |segment| segment.score.to_f >= cutoff }
-    top_results.sort! { |s1, s2| s2.source_published_at <=> s1.source_published_at }
+    top_results.sort! { |s1, s2| (s2.source_published_at || s2.published_at) <=> (s1.source_published_at || s1.published_at) }
     bottom_results.sort! { |s1, s2| s2.score.to_f <=> s1.score.to_f }
     return top_results + bottom_results
   end
