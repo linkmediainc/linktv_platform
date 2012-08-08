@@ -19,7 +19,7 @@
         <enclosure url="<%= video_file.download_url.html_safe %>" length="<%= video_file.file_size %>" type="<%= video_file.mime_type %>" />
         <% end %>
         <% if vs.video.thumbnail.present? %>
-        <media:thumbnail url="<%= thumbnail_url((vs.thumbnail || vs.video.thumbnail), :width => 480, :height => 360, :format => :jpg) %>" />
+        <media:thumbnail url="<%= thumbnail_url((vs.thumbnail || vs.video.thumbnail), :width => 640, :height => 360, :grow => 1, :crop => 'center', :format => :jpg) %>" />
         <% end %>
         <media:keywords><%= video_rss_keywords(vs.video) %></media:keywords>
         <media:text><%= vs.transcript_text %></media:text>
