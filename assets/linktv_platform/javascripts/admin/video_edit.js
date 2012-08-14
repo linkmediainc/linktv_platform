@@ -21,6 +21,7 @@ var VideoEdit = {
           VideoEdit.initSegmentTabs(tabs);
           tabs.removeClass('do-init');
           target.removeClass('state-unloaded');
+          VideoEdit.initLocationAutocomplete($j(target.find(".location-name")));
         }
       });
     }
@@ -131,6 +132,9 @@ var VideoEdit = {
     $j('input.datepicker', publishedAt).datepicker();
 
     VideoEdit.initGeoRestrictions();
+    $j('.location-name').each(function(index) {
+      VideoEdit.initLocationAutocomplete($j(this));
+    });
 
     //
     // Bind events within video "video" section
@@ -614,6 +618,39 @@ var VideoEdit = {
       }
     });
   },
+  
+  initLocationAutocomplete: function(locationField) {
+    var fieldId = locationField.attr("id");
+    $j(document).delegate(".location-name", 'focus mouseup', function(event) {
+      if (event.type == 'focusin') this.select();
+      if (event.type == 'mouseup') return false;    // fix for deselect on mouseup
+    });
+    locationField.autocomplete({
+      minLength: 2,
+      delay: 700,
+      source: function(request, response) {
+        $j.ajax({
+          url: '/admin/locations/autocomplete',
+          dataType: "json",
+          data: {
+            q: request.term
+          },
+          success: function(data) {
+            response(data.data.map(function(item) {
+              return {
+                label: item.name,
+                id: item.id
+              }
+            }));
+          }
+        });
+      },
+      select: function(event, ui) {
+        var item = $j(ui.item)[0];
+        $j(fieldId).val(item.label);
+      }
+    });
+  },
 
   initSegmentTabs: function(segmentTabs) {
     segmentTabs.tabs({
@@ -727,6 +764,9 @@ var VideoEdit = {
       var elem = $j(this);
       elem.attr('name', elem.attr('name').replace(/:model/, newIndex));
       elem.attr('id', elem.attr('id').replace(/:model/, newIndex));
+      if (elem.hasClass('location-name')) {
+        VideoEdit.initLocationAutocomplete(elem);
+      } 
     });
     // Update attributes where :model is used to take the place of the index
     newSegment.find('.indexed').each(function() {

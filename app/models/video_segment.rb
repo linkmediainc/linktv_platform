@@ -5,6 +5,7 @@ class VideoSegment < ActiveRecord::Base
   disable_deletes # Enforce use of destroy so callback are hit
 
   belongs_to :video
+  belongs_to :location
   has_many :video_play_stats
   has_many :topic_video_segments,
     :dependent => :destroy
@@ -336,6 +337,17 @@ class VideoSegment < ActiveRecord::Base
       ExternalContent.filter_collection contents, live_topics_data
       # For the front end, we don't display filtered items at all.
       contents.reject!{|c| c.filtered?}
+    end
+  end
+  
+  def add_location(location_name)
+    loc = Location.create_from_location_name(location_name)
+    if loc
+      self.location = loc
+      return save!
+    else
+      logger.error("Unable to add location #{location_name}")
+      return false
     end
   end
   

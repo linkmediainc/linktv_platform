@@ -19,6 +19,15 @@
       %br
       = segment_form.text_area :transcript_text, :rows => 10, :cols => 80, :class => 'transcript-text',
         :disabled => inputs_disabled
+  %tr
+    %td.align-left
+      = segment_form.label :location_name, 'Location:', :class => 'term',
+        :title => "The geographical location for this video segment"
+      = segment_form.text_field :location_name, :class => 'location-name', :size => 24, :disabled => inputs_disabled,
+        :value => (video_segment.location ? video_segment.location.name : '')
+
+    %td.align-right
+      // intentionally blank
 
 .in-place-edit-context.standard-margin.image-uploader.left
   %dl

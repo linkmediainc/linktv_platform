@@ -92,6 +92,8 @@ ActionController::Routing::Routes.draw do |map|
       :active_scaffold => true
     admin.resources :links,
       :active_scaffold => true
+    admin.resources :locations,
+      :collection => {:autocomplete => :get}
     admin.resources :pages,
       :active_scaffold => true
     admin.resources :playlist_items,

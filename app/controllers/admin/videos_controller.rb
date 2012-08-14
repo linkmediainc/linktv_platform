@@ -133,13 +133,41 @@ class Admin::VideosController < Admin::AdminController
     begin
       # Manual transaction, since we are deleting any old content along with the update of the segment
       Video.transaction do
+        # extract the location names from the video segments - we'll deal with these in
+        # a separate step
+        locations = {}
+        params[:video][:video_segments_attributes].keys.each do |key|
+          next if key =~ /model/
+          segment_attrs = params[:video][:video_segments_attributes][key]
+          locations[temp_location_key(segment_attrs)] = segment_attrs[:location_name]
+          segment_attrs.delete(:location_name)
+        end
 
         begin
-          logger.debug(params[:video].to_yaml)
           @video.update_attributes! params[:video]
         rescue => exc
           # For debug trapping
           raise exc
+        end
+        
+        # update locations, when needed
+        @video.video_segments.each do |segment|
+          next if segment.deleted?
+          submitted_location_name =
+            locations[temp_location_key(segment.attributes.symbolize_keys())]
+          next if submitted_location_name.blank?
+          if (segment.location.nil? || segment.location.name != submitted_location_name)
+            # see if we've already got an exact match for the given name - that will
+            # save our having to do a geocode lookup
+            location = Location.find_by_name(submitted_location_name)
+            if location
+              segment.update_attribute(:location_id, location.id)
+            else
+              if !segment.add_location(submitted_location_name)
+                raise "Unable to add location to segment '#{segment.name}'"
+              end
+            end
+          end
         end
 
         @video.video_files.live.each {|vf| vf.maybe_download_from_source current_user}
@@ -171,6 +199,7 @@ class Admin::VideosController < Admin::AdminController
     rescue String
       flash[:error] = args[:error] if args[:error].is_a?(String)
     rescue Exception => exc
+      raise exc
       log_exception exc
       raise "The video could not be updated."
     end
@@ -199,6 +228,12 @@ class Admin::VideosController < Admin::AdminController
     unless record.video_files.empty?
       record.video_files.each {|f| f.status = :provisioned if f.status.nil?}
     end
+  end
+  
+  # used when get an update submission from the CMS - this lets us associate a location name
+  # with a hash of video segment data, even if the id is not present
+  def temp_location_key(segment_data)
+    segment_data[:name].to_s + segment_data[:transcript_text].to_s
   end
 
 end
