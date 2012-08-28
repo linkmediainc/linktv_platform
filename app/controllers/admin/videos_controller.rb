@@ -164,7 +164,7 @@ class Admin::VideosController < Admin::AdminController
               segment.update_attribute(:location_id, location.id)
             else
               if !segment.add_location(submitted_location_name)
-                raise "Unable to add location to segment '#{segment.name}'"
+                flash[:error] = "Unable to find a location match for #{submitted_location_name}"
               end
             end
           end
