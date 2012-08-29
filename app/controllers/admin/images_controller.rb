@@ -6,6 +6,7 @@ class Admin::ImagesController < Admin::AdminController
   # but contains web image sizes and the numbers are floating point, not
   # integers.
   IMAGE_DIMENSIONS    = {
+    :my_link_story        => {:width => 288.0, :height => 162.0},
     :small_or_related     => {:width => 324.0, :height => 212.0},
     :sidebar_or_doc       => {:width => 324.0, :height => 202.0},
     :medium               => {:width => 324.0, :height => 303.0},
@@ -28,6 +29,7 @@ class Admin::ImagesController < Admin::AdminController
     '16x9'      => {"Story Video"          => IMAGE_DIMENSIONS[:story_video],
                     "Story Video List"     => IMAGE_DIMENSIONS[:story_video_list],
                     "Story Video Timeline" => IMAGE_DIMENSIONS[:story_video_timeline],
+                    "My Link Story"        => IMAGE_DIMENSIONS[:my_link_story],
                     "Web Extra Small"      => IMAGE_DIMENSIONS[:web_x_small],
                     "Web Small"            => IMAGE_DIMENSIONS[:web_small],
                     "Web Medium"           => IMAGE_DIMENSIONS[:web_medium],
