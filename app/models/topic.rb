@@ -125,7 +125,8 @@ class Topic < ActiveRecord::Base
     end
     self.entity_identifiers.each do |ident|
       next if ident.description.blank?
-      return {:text => ident.description, :entity_db => ident.entity_db}
+      return {:text => ident.description, :entity_db => ident.entity_db,
+              :uri => ident.uri, :thumbnail_uri => ident.data.nil? ? nil : ident.data['thumbnail_uri']}
     end
     nil
   end
