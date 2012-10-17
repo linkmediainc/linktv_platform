@@ -37,6 +37,10 @@ ActionController::Routing::Routes.draw do |map|
   map.cached_image 'images/image_cache/:filename.:format',
     :controller => 'images', :action => 'null', :format => image_formats
 
+  # videos with start time - having start_time in the path allows for page caching
+  map.video_with_start_time 'videos/:id/:start', :controller => 'videos', :action => 'show',
+    :conditions => { :method => :get }
+
   #
   # API
   #
