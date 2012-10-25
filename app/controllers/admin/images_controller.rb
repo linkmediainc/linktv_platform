@@ -152,8 +152,9 @@ class Admin::ImagesController < Admin::AdminController
       local_id      = ENV['HOME'] + '/.ssh/id_linktv_news'
       begin
         Net::SSH.start(remote_server, remote_user, :keys => [local_id]) do |ssh|
-          puts ssh.exec!("mkdir -p #{image.cache_dir}")
-          puts "creating remote copies in #{image.cache_dir}"
+          remote_cache_dir = make_remote_path(image.cache_dir)
+          puts ssh.exec!("mkdir -p #{remote_cache_dir}")
+          $stderr.puts "creating remote copies in #{remote_cache_dir}"
         end
 
       rescue Net::SSH => error
@@ -174,27 +175,35 @@ class Admin::ImagesController < Admin::AdminController
 
   private
   
-  def self.copy_to_remote(remote_server, remote_user, local_id, path)
+  def make_remote_path(orig)
+  
+    # Make sure the destination path is in the newspro user's directory. During
+    # testing, the copy is is going to be from newsdev to newspro. In live
+    # production, the servers have a common user name so this transformation is
+    # not needed.
+    dst = orig
+    dst.gsub!(/newsdev/, 'newspro')
+
+    # And another transformation to take into account that the servers may not be
+    # running out of the same deployment directory. Transform the path component
+    # that names a specific directory into the generic symlink.
+    dst.gsub!(/releases\/\d+\//, 'live_production')
+
+    dst
+  end  
+  
+  def self.copy_to_remote(remote_server, remote_user, local_id, src)
     
     return if (remote_server.nil? || remote_user.nil? || local_id.nil?)
     begin
-      # Make sure the destination path is in the newspro user's directory. During
-      # testing, the copy is is going to be from newsdev to newspro. In live
-      # production, the servers have a common user name so this transformation is
-      # not needed.
-      dst = path
-      dst.gsub!(/newsdev/, 'newspro')
-      
-      # And another transformation to take into account that the servers may not be
-      # running out of the same deployment directory. Transform the path component
-      # that names a specific directory into the generic symlink.
-      dst.gsub!(/releases\/\d+\//, 'live_production')
-      
+        
+      dst = make_remote_path(src)
       Net::SCP.start(remote_server, remote_user, :keys => [local_id]) do |scp|
-          scp.upload!(path, dst)
+          scp.upload!(src, dst)
+          $stderr.puts "src: #{src} dst: #{dst}"
       end
     rescue Net::SCP::Error => error
-      $stderr.puts "#{error} server: #{remote_server} user: #{remote_user} path: #{path} dst: #{dst}"
+      $stderr.puts "#{error} server: #{remote_server} user: #{remote_user} src: #{src} dst: #{dst}"
     end
       
   end
