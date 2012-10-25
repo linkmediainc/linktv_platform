@@ -152,7 +152,7 @@ class Admin::ImagesController < Admin::AdminController
       local_id      = ENV['HOME'] + '/.ssh/id_linktv_news'
       begin
         Net::SSH.start(remote_server, remote_user, :keys => [local_id]) do |ssh|
-          remote_cache_dir = self.make_remote_path(image.cache_dir)
+          remote_cache_dir = self.class.make_remote_path(image.cache_dir)
           puts ssh.exec!("mkdir -p #{remote_cache_dir}")
           $stderr.puts "creating remote copies in #{remote_cache_dir}"
         end
@@ -197,7 +197,7 @@ class Admin::ImagesController < Admin::AdminController
     return if (remote_server.nil? || remote_user.nil? || local_id.nil?)
     begin
         
-      dst = self.make_remote_path(src)
+      dst = self.class.make_remote_path(src)
       Net::SCP.start(remote_server, remote_user, :keys => [local_id]) do |scp|
           scp.upload!(src, dst)
           $stderr.puts "src: #{src} dst: #{dst}"
@@ -265,7 +265,7 @@ class Admin::ImagesController < Admin::AdminController
           t.crop!(Magick::NorthGravity, sized_w, t.rows)
           cropped_path = cache_dir + cropped_filename
           t.write(cropped_path)
-          self.copy_to_remote(remote_server, remote_user, local_id, cropped_path)
+          self.class.copy_to_remote(remote_server, remote_user, local_id, cropped_path)
 
         elsif cur_aspect_ratio > group_aspect_ratio
 
@@ -285,7 +285,7 @@ class Admin::ImagesController < Admin::AdminController
 
           cropped_path = cache_dir + cropped_filename
           t.write(cropped_path)
-          self.copy_to_remote(remote_server, remote_user, local_id, cropped_path)
+          self.class.copy_to_remote(remote_server, remote_user, local_id, cropped_path)
 
         else 
           # The aspect ratio is the preferred one. A simple resize
@@ -293,7 +293,7 @@ class Admin::ImagesController < Admin::AdminController
           cropped_and_sized = cropped.resize(sized_w, sized_h)
           cropped_path = cache_dir + cropped_filename
           cropped_and_sized.write(cropped_path)
-          self.copy_to_remote(remote_server, remote_user, local_id, cropped_path)
+          self.class.copy_to_remote(remote_server, remote_user, local_id, cropped_path)
 
         end
 
@@ -306,7 +306,7 @@ class Admin::ImagesController < Admin::AdminController
       cropped_filename = "/thumbnail.width=#{w},height=#{h}#{suffix}"
       cropped_path = cache_dir + cropped_filename
       cropped.write(cropped_path)
-      self.copy_to_remote(remote_server, remote_user, local_id, cropped_path)
+      self.class.copy_to_remote(remote_server, remote_user, local_id, cropped_path)
 
       uri = cache_path + cropped_filename
       sig = md5_signature(uri)
