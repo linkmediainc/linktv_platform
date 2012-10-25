@@ -187,7 +187,7 @@ class Admin::ImagesController < Admin::AdminController
     # And another transformation to take into account that the servers may not be
     # running out of the same deployment directory. Transform the path component
     # that names a specific directory into the generic symlink.
-    dst.gsub!(/releases\/\d+\//, 'live_production')
+    dst.gsub!(/releases\/\d+\//, 'live_production/')
 
     dst
   end  
