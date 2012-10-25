@@ -152,7 +152,7 @@ class Admin::ImagesController < Admin::AdminController
       local_id      = ENV['HOME'] + '/.ssh/id_linktv_news'
       begin
         Net::SSH.start(remote_server, remote_user, :keys => [local_id]) do |ssh|
-          remote_cache_dir = make_remote_path(image.cache_dir)
+          remote_cache_dir = self.make_remote_path(image.cache_dir)
           puts ssh.exec!("mkdir -p #{remote_cache_dir}")
           $stderr.puts "creating remote copies in #{remote_cache_dir}"
         end
@@ -197,7 +197,7 @@ class Admin::ImagesController < Admin::AdminController
     return if (remote_server.nil? || remote_user.nil? || local_id.nil?)
     begin
         
-      dst = make_remote_path(src)
+      dst = self.make_remote_path(src)
       Net::SCP.start(remote_server, remote_user, :keys => [local_id]) do |scp|
           scp.upload!(src, dst)
           $stderr.puts "src: #{src} dst: #{dst}"
