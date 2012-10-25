@@ -178,11 +178,18 @@ class Admin::ImagesController < Admin::AdminController
     
     return if (remote_server.nil? || remote_user.nil? || local_id.nil?)
     begin
-      # Make sure the destination path is correct. During testing, the copy is is going 
-      # to be from newsdev to newspro. In live production, the server set has an identical
-      # image base directories, so no transformation is needed.
+      # Make sure the destination path is in the newspro user's directory. During
+      # testing, the copy is is going to be from newsdev to newspro. In live
+      # production, the servers have a common user name so this transformation is
+      # not needed.
       dst = path
       dst.gsub!(/newsdev/, 'newspro')
+      
+      # And another transformation to take into account that the servers may not be
+      # running out of the same deployment directory. Transform the path component
+      # that names a specific directory into the generic symlink.
+      dst.gsub!(/releases\/\d+\//, 'live_production')
+      
       Net::SCP.start(remote_server, remote_user, :keys => [local_id]) do |scp|
           scp.upload!(path, dst)
       end
