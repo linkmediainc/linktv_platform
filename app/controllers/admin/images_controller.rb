@@ -175,7 +175,7 @@ class Admin::ImagesController < Admin::AdminController
 
   private
   
-  def make_remote_path(orig)
+  def self.make_remote_path(orig)
   
     # Make sure the destination path is in the newspro user's directory. During
     # testing, the copy is is going to be from newsdev to newspro. In live
