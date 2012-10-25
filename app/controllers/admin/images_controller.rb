@@ -149,10 +149,15 @@ class Admin::ImagesController < Admin::AdminController
        RAILS_ENV == 'dev_staging'
       remote_server = 'news2.linktv.org'
       remote_user   = 'newspro'
-      local_id      = ENV['HOME'] + '.ssh/id_linktv_news'
-      Net::SSH.start(remote_server, remote_user, :keys => [local_id]) do |ssh|
-        puts ssh.exec!("mkdir -p #{image.cache_dir}")
-        puts "creating remote copies in #{image.cache_dir}"
+      local_id      = ENV['HOME'] + '/.ssh/id_linktv_news'
+      begin
+        Net::SSH.start(remote_server, remote_user, :keys => [local_id]) do |ssh|
+          puts ssh.exec!("mkdir -p #{image.cache_dir}")
+          puts "creating remote copies in #{image.cache_dir}"
+        end
+
+      rescue Net::SSH => error
+        $stderr.puts "#{error} server: #{remote_server} user: #{remote_user} id: #{local_id}"
       end
 
     end
