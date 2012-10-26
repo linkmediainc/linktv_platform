@@ -184,8 +184,7 @@ class Admin::ImagesController < Admin::AdminController
     # testing, the copy is is going to be from newsdev to newspro. In live
     # production, the servers have a common user name so this transformation is
     # not needed.
-    dst = orig
-    dst.gsub!(/newsdev/, 'newspro')
+    dst = orig.gsub(/newsdev/, 'newspro')
 
     # And another transformation to take into account that the servers may not be
     # running out of the same deployment directory. Transform the path component
