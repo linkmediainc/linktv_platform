@@ -199,14 +199,14 @@ class Admin::ImagesController < Admin::AdminController
     
     return if (remote_server.nil? || remote_user.nil? || local_id.nil?)
     begin
-        
+      logger.error("src (before transformation): #{src}")
       dst = Admin::ImagesController.make_remote_path(src)
       Net::SCP.start(remote_server, remote_user, :keys => [local_id]) do |scp|
-          logger.error "src: #{src} dst: #{dst}"
+          logger.error "src: #{src}\ndst: #{dst}"
           scp.upload!(src, dst)
       end
     rescue Net::SCP::Error => error
-      logger.error "#{error} server: #{remote_server} user: #{remote_user} src: #{src} dst: #{dst}"
+      logger.error "#{error}\nserver: #{remote_server}\nuser: #{remote_user}\nsrc: #{src}\ndst: #{dst}"
     rescue Errno => error
       logger.error "#{error}"
     end
