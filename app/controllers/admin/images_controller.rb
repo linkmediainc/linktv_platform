@@ -197,7 +197,7 @@ class Admin::ImagesController < Admin::AdminController
     return if (remote_server.nil? || remote_user.nil? || local_id.nil?)
     begin
         
-      dst = self.class.make_remote_path(src)
+      dst = Admin::ImagesController.make_remote_path(src)
       Net::SCP.start(remote_server, remote_user, :keys => [local_id]) do |scp|
           scp.upload!(src, dst)
           $stderr.puts "src: #{src} dst: #{dst}"
