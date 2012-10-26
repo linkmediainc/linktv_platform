@@ -145,6 +145,7 @@ class Admin::ImagesController < Admin::AdminController
     # the dev staging server to do this copy, for testing. The latter clause
     # should be removed after the redundant set is activated. We don't want
     # admin actions on dev to pollute the live images.
+    logger.error "env: #{RAILS_ENV} hostname: #{local_hostname}"
     if (RAILS_ENV == 'live_production' && local_hostname =~ /news1/) ||
        RAILS_ENV == 'dev_staging'
       remote_server = 'news2.linktv.org'
@@ -154,13 +155,15 @@ class Admin::ImagesController < Admin::AdminController
         Net::SSH.start(remote_server, remote_user, :keys => [local_id]) do |ssh|
           remote_cache_dir = self.class.make_remote_path(image.cache_dir)
           puts ssh.exec!("mkdir -p #{remote_cache_dir}")
-          $stderr.puts "creating remote copies in #{remote_cache_dir}"
+          logger.error "creating remote copies in #{remote_cache_dir}"
         end
 
       rescue Net::SSH => error
-        $stderr.puts "#{error} server: #{remote_server} user: #{remote_user} id: #{local_id}"
+        logger.error "#{error} server: #{remote_server} user: #{remote_user} id: #{local_id}"
       end
 
+    else
+      logger.error "No remote copy needed"
     end
 
     uris = self.class.create_images(cropped, params[:group],
@@ -200,10 +203,10 @@ class Admin::ImagesController < Admin::AdminController
       dst = Admin::ImagesController.make_remote_path(src)
       Net::SCP.start(remote_server, remote_user, :keys => [local_id]) do |scp|
           scp.upload!(src, dst)
-          $stderr.puts "src: #{src} dst: #{dst}"
+          logger.error "src: #{src} dst: #{dst}"
       end
     rescue Net::SCP::Error => error
-      $stderr.puts "#{error} server: #{remote_server} user: #{remote_user} src: #{src} dst: #{dst}"
+      logger.error "#{error} server: #{remote_server} user: #{remote_user} src: #{src} dst: #{dst}"
     end
       
   end
