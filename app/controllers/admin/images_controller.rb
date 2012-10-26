@@ -202,11 +202,13 @@ class Admin::ImagesController < Admin::AdminController
         
       dst = Admin::ImagesController.make_remote_path(src)
       Net::SCP.start(remote_server, remote_user, :keys => [local_id]) do |scp|
-          scp.upload!(src, dst)
           logger.error "src: #{src} dst: #{dst}"
+          scp.upload!(src, dst)
       end
     rescue Net::SCP::Error => error
       logger.error "#{error} server: #{remote_server} user: #{remote_user} src: #{src} dst: #{dst}"
+    rescue Errno => error
+      logger.error "#{error}"
     end
       
   end
