@@ -145,7 +145,6 @@ class Admin::ImagesController < Admin::AdminController
     # the dev staging server to do this copy, for testing. The latter clause
     # should be removed after the redundant set is activated. We don't want
     # admin actions on dev to pollute the live images.
-    logger.error "env: #{RAILS_ENV} hostname: #{local_hostname}"
     if (RAILS_ENV == 'live_production' && local_hostname =~ /news1/) ||
        RAILS_ENV == 'dev_staging'
       remote_server = 'news2.linktv.org'
@@ -198,7 +197,6 @@ class Admin::ImagesController < Admin::AdminController
     
     return if (remote_server.nil? || remote_user.nil? || local_id.nil?)
     begin
-      logger.error("src (before transformation): #{src}")
       dst = Admin::ImagesController.make_remote_path(src)
       Net::SCP.start(remote_server, remote_user, :keys => [local_id]) do |scp|
           logger.error "src: #{src}\ndst: #{dst}"
