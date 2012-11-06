@@ -22,7 +22,7 @@
         Review Video
         - if @video.permalink.present?
           &mdash;
-          %a{:href => video_path(@video.permalink), :title => 'View on front end', :target => '_blank'}
+          %a{:href => video_path(@video.permalink, :refresh => 'force'), :title => 'View on front end', :target => '_blank'}
             = @video.name if @video.name.present?
       - else
         Review Imported Video &mdash;
