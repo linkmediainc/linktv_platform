@@ -1,3 +1,5 @@
+require 'net/scp'
+require 'net/ssh'
 require 'RMagick'
 
 class Admin::ImagesController < Admin::AdminController
@@ -130,20 +132,85 @@ class Admin::ImagesController < Admin::AdminController
     suffix = '.jpg' if (suffix == '.jpeg')
     
     FileUtils.mkdir_p image.cache_dir unless File.exist?(image.cache_dir)
+
     
+    local_hostname = Socket.gethostname
+    remote_server  = nil
+    remote_user    = nil
+    local_id       = nil
+
+    # It's a little inflexible to hardcode this logic. The idea is that in
+    # production, one of the servers is the admin "master" and hence the copy
+    # should be from that machine to the other one. Temporarily, allow the
+    # the dev staging server to do this copy, for testing. The latter clause
+    # should be removed after the redundant set is activated. We don't want
+    # admin actions on dev to pollute the live images.
+    if (RAILS_ENV == 'live_production' && local_hostname =~ /news1/) ||
+       RAILS_ENV == 'dev_staging'
+      remote_server = 'news2.linktv.org'
+      remote_user   = 'newspro'
+      local_id      = ENV['HOME'] + '/.ssh/id_linktv_news'
+      begin
+        Net::SSH.start(remote_server, remote_user, :keys => [local_id]) do |ssh|
+          remote_cache_dir = self.class.make_remote_path(image.cache_dir)
+          puts ssh.exec!("mkdir -p #{remote_cache_dir}")
+          logger.error "creating remote copies in #{remote_cache_dir}"
+        end
+
+      rescue Net::SSH => error
+        logger.error "#{error} server: #{remote_server} user: #{remote_user} id: #{local_id}"
+      end
+
+    else
+      logger.error "No remote copy needed"
+    end
+
     uris = self.class.create_images(cropped, params[:group],
                                     image.cache_dir, image.cache_path,
-                                    suffix)
-  
+                                    suffix, remote_server, remote_user, local_id)
+
     # "uris" is an array of hashes, which isn't handled correctly by
     #  the "render :json => <something>" construct used in other contexts.
    render :text => uris.to_json
-   
+
   end
 
   private
+  
+  def self.make_remote_path(orig)
+  
+    # Make sure the destination path is in the newspro user's directory. During
+    # testing, the copy is is going to be from newsdev to newspro. In live
+    # production, the servers have a common user name so this transformation is
+    # not needed.
+    dst = orig.gsub(/newsdev/, 'newspro')
 
-  def self.create_images(cropped, group_name, cache_dir, cache_path, suffix)
+    # And another transformation to take into account that the servers may not be
+    # running out of the same deployment directory. Transform the path component
+    # that names a specific directory into the generic symlink.
+    dst.gsub!(/releases\/\d+\//, 'live_production/')
+
+    dst
+  end  
+  
+  def self.copy_to_remote(remote_server, remote_user, local_id, src)
+    
+    return if (remote_server.nil? || remote_user.nil? || local_id.nil?)
+    begin
+      dst = Admin::ImagesController.make_remote_path(src)
+      Net::SCP.start(remote_server, remote_user, :keys => [local_id]) do |scp|
+          logger.error "src: #{src}\ndst: #{dst}"
+          scp.upload!(src, dst)
+      end
+    rescue Net::SCP::Error => error
+      logger.error "#{error}\nserver: #{remote_server}\nuser: #{remote_user}\nsrc: #{src}\ndst: #{dst}"
+    rescue Errno => error
+      logger.error "#{error}"
+    end
+      
+  end
+
+  def self.create_images(cropped, group_name, cache_dir, cache_path, suffix, remote_server, remote_user, local_id)
 
     # The list of created images are returned as a JSON-encoded list.
     uris  = []
@@ -198,7 +265,9 @@ class Admin::ImagesController < Admin::AdminController
           resized.write(tmp_filename)
           t = Magick::ImageList.new(tmp_filename)
           t.crop!(Magick::NorthGravity, sized_w, t.rows)
-          t.write(cache_dir + cropped_filename)
+          cropped_path = cache_dir + cropped_filename
+          t.write(cropped_path)
+          Admin::ImagesController.copy_to_remote(remote_server, remote_user, local_id, cropped_path)
 
         elsif cur_aspect_ratio > group_aspect_ratio
 
@@ -215,14 +284,19 @@ class Admin::ImagesController < Admin::AdminController
           resized.write(tmp_filename)
           t = Magick::ImageList.new(tmp_filename)
           t.crop!(Magick::NorthGravity, t.columns, sized_h)
-          t.write(cache_dir + cropped_filename)
+
+          cropped_path = cache_dir + cropped_filename
+          t.write(cropped_path)
+          Admin::ImagesController.copy_to_remote(remote_server, remote_user, local_id, cropped_path)
 
         else 
           # The aspect ratio is the preferred one. A simple resize
           # suffices in this case.
           cropped_and_sized = cropped.resize(sized_w, sized_h)
-          cropped_and_sized.write(cache_dir + cropped_filename)
-                    
+          cropped_path = cache_dir + cropped_filename
+          cropped_and_sized.write(cropped_path)
+          Admin::ImagesController.copy_to_remote(remote_server, remote_user, local_id, cropped_path)
+
         end
 
       end
@@ -232,7 +306,10 @@ class Admin::ImagesController < Admin::AdminController
       # this path is only for testing: it does not add in any of the cropping
       # parameters that will be sent by the app or the web.
       cropped_filename = "/thumbnail.width=#{w},height=#{h}#{suffix}"
-      cropped.write(cache_dir + cropped_filename)
+      cropped_path = cache_dir + cropped_filename
+      cropped.write(cropped_path)
+      Admin::ImagesController.copy_to_remote(remote_server, remote_user, local_id, cropped_path)
+
       uri = cache_path + cropped_filename
       sig = md5_signature(uri)
       uris << {:size => 'user-specified', :uri => "#{uri}?sig=#{sig}"}

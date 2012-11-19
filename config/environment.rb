@@ -49,6 +49,10 @@ module Linktv
       config.gem "builder", :version => '= 2.1.2'
       config.gem "feedzirra", :version => '0.0.24'
       config.gem "sax-machine", :version => '0.0.16'
+      
+      # File transfer stuff.
+      config.gem "net-ssh", :lib => "net/ssh"
+      config.gem "net-scp", :lib => "net/scp"
 
       config.after_initialize do
 
