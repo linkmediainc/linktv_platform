@@ -314,12 +314,10 @@ class VideoSegment < ActiveRecord::Base
   def load_contents_data
     self.view_data ||= {}
 
-    # Internal related videos
-    self.view_data[:related_internal_videos] = Video.
-      scoped(:conditions => ["videos.id != ?", self.video_id]).
-      available.
-      related_to_video_segments(self.id).
-      include_thumbnail
+    # # Internal related videos
+    # This appears not to be used anymore - the only placed it's being called is in 
+    # app/views/video_segments files, and these don't seem to be referenced anywhere
+    self.view_data[:related_internal_videos] = []
 
     self.view_data[:related_internal_video_segments] = self.live_related_internal_video_segments()
 
