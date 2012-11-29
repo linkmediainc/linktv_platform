@@ -130,6 +130,13 @@ class Admin::VideosController < Admin::AdminController
 
     params[:video][:duration] = parse_time params[:video][:duration] if params[:video][:duration].present?
 
+    cur_video_provider = params[:video][:video_provider_id]
+    if cur_video_provider.nil? || cur_video_provider.blank?
+      flash[:error] = "Unspecified or unknown source."
+      redirect_to_edit
+      return
+    end
+
     begin
       # Manual transaction, since we are deleting any old content along with the update of the segment
       Video.transaction do
@@ -178,17 +185,9 @@ class Admin::VideosController < Admin::AdminController
         @video.update_all_external_contents_later
 
         flash[:notice] = "Video updated."
-
-        if request.accept.match(/^application\/json/)
-          respond_to do |format|
-            format.json do
-              xhr_redirect edit_admin_video_url(@video)
-            end
-          end
-        else
-          redirect_to :action => 'edit'
-        end
+        redirect_to_edit
       end
+
     rescue ActiveRecord::RecordInvalid => exc
       log_exception exc
       if request.accept.match(/^application\/json/)
@@ -234,6 +233,21 @@ class Admin::VideosController < Admin::AdminController
   # with a hash of video segment data, even if the id is not present
   def temp_location_key(segment_data)
     segment_data[:name].to_s + segment_data[:transcript_text].to_s
+  end
+
+  # The redirect happens in two case: when the update was successful (this
+  # has always been the case) and if the validation of the source field
+  # fails (this was a later enhancement).
+  def redirect_to_edit
+    if request.accept.match(/^application\/json/)
+      respond_to do |format|
+        format.json do
+          xhr_redirect edit_admin_video_url(@video)
+        end
+      end
+    else
+      redirect_to :action => 'edit'
+    end
   end
 
 end
