@@ -16,7 +16,7 @@ class Thumbnailer
     # Validate signature
     sig = env['QUERY_STRING'].match(/sig=(\w+)/)[1] rescue nil
     exp_sig = md5_signature env['PATH_INFO']
-    raise Exceptions::HTTPBadRequest if exp_sig != sig
+    return [404, {}, []] if exp_sig != sig
 
     # Example URL
     # http://localhost:3000/images/image_cache/base-33000/33589/thumbnail.mask=1,width=60,min=1,height=60,crop=center.png?sig=0877966fa5d0d9879ec77da5a6079450
