@@ -50,28 +50,41 @@ class Admin::AdminController < ApplicationController
 
   # Exception handling
 
-  rescue_from Exceptions::Unauthorized do |exception|
-    if request.xhr? && current_user_session && current_user_session.stale? &&
-        current_user.roles.map{|r| r.name.to_sym}.include?(:admin) &&
-      # Give the user a chance to log in again
-      @user_session = current_user_session
-      @user = @user_session.attempted_record
-      js = render_to_string :partial => 'admin/user_session/renew.js.erb'
-      respond_to do |format|
-        format.json {
-          render :json => {
-            :status => :session_expired,
-            :js => js
-          },
-          :status => :unauthorized
-        }
+  # The class list was genericized so that the handling of "unauthorized"
+  # is unchanged, but all other exceptions will now result in an error
+  # message and stack trace. Previously, these elicited the static "internal
+  # server error" page which has no diagnostic information.
+  rescue_from Exception do |exception|
+
+    case exception
+    when Exceptions::Unauthorized
+      if request.xhr? && current_user_session && current_user_session.stale? &&
+          current_user.roles.map{|r| r.name.to_sym}.include?(:admin) &&
+        # Give the user a chance to log in again
+        @user_session = current_user_session
+        @user = @user_session.attempted_record
+        js = render_to_string :partial => 'admin/user_session/renew.js.erb'
+        respond_to do |format|
+          format.json {
+            render :json => {
+              :status => :session_expired,
+              :js => js
+            },
+            :status => :unauthorized
+          }
+        end
+        return
       end
-      return
+
+      # Not authorized
+      store_location
+      redirect_to new_admin_user_session_url
+
+    else
+      log_exception exception
+      render 'admin/exception', :layout => true, :locals => {:exception => exception}
     end
 
-    # Not authorized
-    store_location
-    redirect_to new_admin_user_session_url
   end
 
   def log_exception exception
@@ -89,6 +102,7 @@ class Admin::AdminController < ApplicationController
   end
   protected :log_exception
 
+  # This may be dead code: no classes are specified.
   rescue_from do |exception|
     log_exception exception
     if request.xhr?
