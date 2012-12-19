@@ -95,22 +95,23 @@ var VideoEdit = {
         }
 
         serializedData = form.serializeArray();
-        var existing_source, new_source;
+        var source_id, source_autocomplete;
         jQuery.each(serializedData, function(i, elem) {
           if (elem.name == 'video[video_provider_id]') {
-              existing_source = elem.value;
-              console.log('existing: ' + existing_source);
+              source_id = elem.value;
+              console.log('source id ' + source_id);
           }
           else if (elem.name == 'video_provider_autocomplete') {
-              new_source = elem.value;
-              console.log('new: ' + new_source);
+              source_autocomplete = elem.value;
+              console.log('source autocomplete: ' + source_autocomplete);
           }
         });
 
- // (/^ *$/)
-       if (existing_source === '' && new_source == '') {
+       if (source_id == '') {
 	   $j(event.target).trigger('operation-end');
-          alert ("Please specify a source for this video");
+          alert ("Please specify a source for this video. Make sure you " +
+                 "select one of the choices from the menu. Typing it out " +
+                 "fully does not work.");
 	  return false;
        }
 
