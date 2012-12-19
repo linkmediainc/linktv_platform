@@ -94,6 +94,26 @@ var VideoEdit = {
           return false;
         }
 
+        serializedData = form.serializeArray();
+        var existing_source, new_source;
+        jQuery.each(serializedData, function(i, elem) {
+          if (elem.name == 'video[video_provider_id]') {
+              existing_source = elem.value;
+              console.log('existing: ' + existing_source);
+          }
+          else if (elem.name == 'video_provider_autocomplete') {
+              new_source = elem.value;
+              console.log('new: ' + new_source);
+          }
+        });
+
+ // (/^ *$/)
+       if (existing_source === '' && new_source == '') {
+	   $j(event.target).trigger('operation-end');
+          alert ("Please specify a source for this video");
+	  return false;
+       }
+
         // Don't send non-static content
         VideoEdit.disableUnmodifiedContent();
 
@@ -101,7 +121,7 @@ var VideoEdit = {
           type: 'POST',
           url: form.attr('action'),
           dataType: 'json',
-          data: form.serializeArray(),
+          data: serializedData,
           trigger: $j(event.target),
           successClearContentModified: true
         });
