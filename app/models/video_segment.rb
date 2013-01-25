@@ -301,9 +301,10 @@ class VideoSegment < ActiveRecord::Base
   #   - sort the rest of the results by relevance (score)
   #   - return the two result sets as a single array
   def live_related_internal_video_segments
-    segments = Array(VideoSegment.related_to_video_segments(self.id).live)
-    return segments if segments.nil? || segments.empty?
-    segments.reject! { |segment| segment.score.to_f < 50 }
+    all_segments = Array(VideoSegment.related_to_video_segments(self.id).live)
+    return all_segments if all_segments.nil? || all_segments.empty?
+    segments = all_segments.reject { |segment| segment.score.to_f < 50 }
+    return all_segments if segments.blank?
     cutoff = segments.first.score.to_f * 0.6
     (top_results, bottom_results) = segments.partition { |segment| segment.score.to_f >= cutoff }
     top_results.sort! { |s1, s2| (s2.source_published_at || s2.published_at) <=> (s1.source_published_at || s1.published_at) }

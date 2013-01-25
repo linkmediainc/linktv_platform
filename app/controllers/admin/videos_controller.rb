@@ -191,7 +191,7 @@ class Admin::VideosController < Admin::AdminController
     rescue ActiveRecord::RecordInvalid => exc
       log_exception exc
       if request.accept.match(/^application\/json/)
-        raise "The video could not be updated."
+        raise "The video could not be updated: #{exc.to_s} - #{self.errors.full_messages.inspect}"
       end
       assign_review_variables
       render :action => :edit
