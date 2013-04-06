@@ -92,7 +92,8 @@ apis:
     limit: 20
   socialactions:
     limit: 20
-
+  google:
+    browser_key: AIzaSyBHX6VCAiFtarRqFZK1jK2ISfjQh3jMmmg
 # Thumbnails
 thumbnails:
   format: jpg

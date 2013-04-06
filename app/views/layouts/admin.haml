@@ -8,7 +8,7 @@
       = title unless title.empty?
 
     -# jQuery
-    = javascript_include_tag "https://ajax.googleapis.com/ajax/libs/jquery/1.4.3/jquery.min.js"
+    = javascript_include_tag "https://ajax.googleapis.com/ajax/libs/jquery/1.4.4/jquery.min.js"
     :javascript
       $j = jQuery.noConflict(); // Use $j instead of $ for jQuery due to prototype being required in ActiveScaffold
     = javascript_include_tag "https://ajax.googleapis.com/ajax/libs/jqueryui/1.8.2/jquery-ui.min.js"
@@ -35,8 +35,8 @@
     != active_scaffold_includes
 
     -# Freebase
-    = javascript_include_tag "http://freebaselibs.com/static/suggest/1.3/suggest.min.js"
-    = stylesheet_link_tag "http://freebaselibs.com/static/suggest/1.3/suggest.min.css"
+    = javascript_include_tag "https://www.gstatic.com/freebase/suggest/4_1/suggest.min.js"
+    = stylesheet_link_tag "https://www.gstatic.com/freebase/suggest/4_1/suggest.min.css"
 
     -# Application-specific
     = stylesheet_link_tag "#{LINKTV_PLATFORM_ASSETS_PATH}/stylesheets/admin"

@@ -19,7 +19,8 @@ var Topics = (function() {
 
         // Freebase suggest API
         $j('#freebase_name', context).filter('.do-init').removeClass('do-init').suggest({
-            zIndex: 9999
+            zIndex: 9999,
+	    key: 'AIzaSyBHX6VCAiFtarRqFZK1jK2ISfjQh3jMmmg'
         }).bind('fb-select', function(event, data) {
           // Name form field is set automatically by the suggest call
           setIdentifier($j(this).parents('.object-entity-db'), data.name, data.id);
