@@ -89,9 +89,10 @@ ActionController::Routing::Routes.draw do |map|
     admin.resources :images,
       :active_scaffold => true
     # These routes are for the image cropping page
-    admin.resources :images, :only => [], :member => {:original     => :get,
-                                                      :prepare_crop => :get,
-                                                      :crop         => :post}    
+    admin.resources :images, :only => [], :member => {:original      => :get,
+                                                      :prepare_crop  => :get,
+                                                      :crop          => :post,
+                                                      :show_crops => :get}
     admin.resources :imported_videos,
       :active_scaffold => true
     admin.resources :links,

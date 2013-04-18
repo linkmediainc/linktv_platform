@@ -175,6 +175,41 @@ class Admin::ImagesController < Admin::AdminController
 
   end
 
+  def show_crops
+    @crops = []
+
+    @image_id = params[:id]
+
+    unless @image_id.nil?
+      thumbnail = Image.find(@image_id)
+      unless thumbnail.nil?
+        [['square',    'Home Screen Medium'],
+         ['landscape', 'Lead Story'],
+         ['16x9',      'Web Extra Large']].each do |x|
+          group = x[0]
+          size  = x[1]
+          dim = IMAGE_GROUPS[group][size]
+          filename_glob = filename_for_image_in_group(size, dim[:width], dim[:height], '.*')
+          pathglob = Dir.glob("#{thumbnail.cache_dir}#{filename_glob}")
+          if pathglob.empty?
+            url  = ""
+            path = ""
+          else
+            filename = File.basename pathglob[0]
+            url  = "#{thumbnail.cache_path}/#{filename}"
+            path = "#{thumbnail.cache_dir}/#{filename}"
+          end
+          @crops << {:group => group, :url => url, :path => path}
+        end
+      end
+    end
+
+    respond_to do |format|
+      format.html { render :layout => 'show_crops'}
+    end
+
+  end
+
   private
   
   def self.make_remote_path(orig)
@@ -192,7 +227,13 @@ class Admin::ImagesController < Admin::AdminController
 
     dst
   end  
-  
+
+  def filename_for_image_in_group(size, w, h, suffix)
+
+        extra_args = (size =~ /^Web/) ? ',grow=1,crop=center' : ''
+        cropped_filename = "/thumbnail.width=#{w.to_i},height=#{h.to_i}#{extra_args}#{suffix}"
+  end
+
   def self.copy_to_remote(remote_server, remote_user, local_id, src)
     
     return if (remote_server.nil? || remote_user.nil? || local_id.nil?)

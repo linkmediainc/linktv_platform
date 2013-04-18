@@ -1,0 +1,10 @@
+%h2.top-margin= "Current Crops for Image #{@image_id}:"
+
+- @crops.each do |crop|
+  %h3= crop[:group]
+  - if crop[:url].blank?
+    %p No Crops
+  - else
+    %img{:src => crop[:url]}
+    %p= "Directory Path: #{crop[:path]}"
+    
