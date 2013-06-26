@@ -44,11 +44,18 @@ class ImagesController < FrontEndController
 
   end
 
+  # this is just here to help with exporting content to the new site
   def original
     image = Image.find(params[:id])
     
+    filename = image.pathname
+    # hack: if we don't have the original file, get the largest version we have
+    if !File.exists?(image.pathname)
+      filename = "#{RAILS_ROOT}/public/images/image_cache/base-#{((image.id / 1000).to_i * 1000).to_s}/#{image.id}/thumbnail.width=640,height=360,grow=1,crop=center.jpg"
+    end
+    
     begin
-    File.open(image.pathname, 'rb') do |f|
+    File.open(filename, 'rb') do |f|
         send_data f.read, :type => "image/jpeg", :disposition => "inline"
       end
     rescue
