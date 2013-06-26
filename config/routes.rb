@@ -32,6 +32,7 @@ ActionController::Routing::Routes.draw do |map|
     :controller => 'images', :action => 'thumbnail', :format => image_formats
   map.image_thumbnail 'images/image_cache/:base_dir/:id/thumbnail.:options.:format',
     :controller => 'images', :action => 'thumbnail', :format => image_formats
+  map.image_original 'images/:id/original', :controller => 'images', :action => 'original'
 
   # Route to "null" action, this is only used for generating named routes to an existing file
   map.cached_image 'images/image_cache/:filename.:format',

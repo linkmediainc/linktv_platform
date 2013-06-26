@@ -44,4 +44,15 @@ class ImagesController < FrontEndController
 
   end
 
+  def original
+    image = Image.find(params[:id])
+    
+    begin
+    File.open(image.pathname, 'rb') do |f|
+        send_data f.read, :type => "image/jpeg", :disposition => "inline"
+      end
+    rescue
+    end
+  end
+
 end
